@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose'
+import mongoosastic from '../../lib'
 
 export interface IBook extends Document{
     title: string;
@@ -7,10 +8,17 @@ export interface IBook extends Document{
 }
 
 const BookSchema: Schema = new Schema({
-	title: { type: String, required: true },
-	description: { type: String },
+	title: { 
+		fr: { type: String, required: true },
+		ar: { type: String, required: true },
+		en: { type: String, required: true },
+	},
+	description: String,
+	keywords: [String],
 	price: { type: Number, required: true },
 })
+
+BookSchema.plugin(mongoosastic)
 
 // Export the model and return your IBook interface
 export const Books = mongoose.model<IBook>('Book', BookSchema)
