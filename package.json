@@ -8,7 +8,6 @@
   },
   "dependencies": {
     "@elastic/elasticsearch": "^7.13.0",
-    "@types/mongoose": "^5.11.97",
     "lodash": "^4.17.21",
     "mongoose": "^5.12.14"
   },
