@@ -27,7 +27,9 @@
     ]
   },
   "include": [
+    "lib/**/*.ts",
     "tests/**/*.ts",
+    "types/**/*.ts",
     "example/**/*.ts"
   ],
   // "exclude": []

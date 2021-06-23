@@ -1,6 +1,7 @@
 'use strict'
 
 import cloneDeep from 'lodash.clonedeep'
+import { Schema } from 'mongoose'
 
 //
 // Get type from the mongoose schema
@@ -11,7 +12,7 @@ import cloneDeep from 'lodash.clonedeep'
 // @param field
 // @return the type or false
 
-function getTypeFromPaths (paths, field) {
+function getTypeFromPaths (paths: Record<string, any>, field: string) {
 	let type = false
 
 	if (paths[field] && paths[field].options.type === Date) {
@@ -38,8 +39,8 @@ function getTypeFromPaths (paths, field) {
 // @param inPrefix
 // @return the mapping
 //
-function getMapping (cleanTree, inPrefix) {
-	const mapping = {}
+function getMapping (cleanTree: Record<string, any>, inPrefix: string) {
+	const mapping: Record<string, any> = {}
 	let value
 	let field: string
 	let prop: string
@@ -133,8 +134,8 @@ function getMapping (cleanTree, inPrefix) {
 // @param prefix
 // @return the tree
 //
-function getCleanTree (tree, paths, inPrefix, isRoot=false) {
-	const cleanTree = {}
+function getCleanTree (tree: Record<string, any>, paths: Record<string, any>, inPrefix: string, isRoot=false) {
+	const cleanTree: Record<string, any> = {}
 	let type
 	let value
 	let field
@@ -241,7 +242,7 @@ function getCleanTree (tree, paths, inPrefix, isRoot=false) {
 // @param prefix
 // @return cleanTree modified
 //
-function nestedSchema (paths, field, cleanTree, value, prefix) {
+function nestedSchema (paths: Record<string, any>, field: string, cleanTree: Record<string, any>, value: Array<any>, prefix: string) {
 	let treeNode
 	let subTree
 	// A nested array can contain complex objects
@@ -287,13 +288,13 @@ function nestedSchema (paths, field, cleanTree, value, prefix) {
 }
 
 export default class Generator {
-	generateMapping(schema): Record<string, unknown> {
+	generateMapping(schema: any): Record<string, unknown> {
 		const cleanTree = getCleanTree(schema.tree, schema.paths, '', true)
 		delete cleanTree[schema.get('versionKey')]
 		const mapping = getMapping(cleanTree, '')
 		return { properties: mapping }
 	}
-	getCleanTree(schema): Record<string, unknown> {
+	getCleanTree(schema: any): Record<string, unknown> {
 		return getCleanTree(schema.tree, schema.paths, '', true)
 	}
 }
