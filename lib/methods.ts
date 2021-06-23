@@ -1,7 +1,21 @@
 import { Document } from 'mongoose'
-import { getIndexName } from './utils'
+import { getIndexName, serialize } from './utils'
+import client from './esClient'
 
+export function index(doc: Document, options: Options, cb?: CallableFunction): void {
+	
+	const index = options && options.index
+	const indexName = getIndexName(doc, index)
 
-export function index(doc: Document, options: Options): void {
-	const index = getIndexName(doc, options.index)    
+	const body = serialize(doc)
+	
+	const opt = {
+		index: indexName,
+		id: doc._id.toString(),
+		body: body
+	}
+
+	client.index(opt).then((value) => {
+		cb!(value)
+	})
 }

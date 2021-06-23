@@ -10,8 +10,8 @@ export interface IBook extends Document{
 const BookSchema: Schema = new Schema({
 	title: { 
 		fr: { type: String, required: true },
-		ar: { type: String, required: true },
-		en: { type: String, required: true },
+		ar: { type: String },
+		en: { type: String },
 	},
 	description: String,
 	keywords: [String],

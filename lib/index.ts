@@ -1,17 +1,10 @@
 import { Document, Schema, HookNextFunction } from 'mongoose'
-import Generator from './mapping-generator'
+import { postSave } from './hooks'
 
 export default function mongoosastic(schema: Schema, options: Options): void {
 
-	const generator = new Generator()
-
-	schema.post(['find', 'findOne'], (docs: Document[], next: HookNextFunction) => {
-
-		const mapping = generator.generateMapping(schema)
-
-		console.log('mapping:', mapping)
-		
-		console.log('Found those documents:', docs)
+	schema.post('save', (doc: Document, next: HookNextFunction) => {
+		postSave(doc, options)
 		next()
 	})
 }
