@@ -7,4 +7,14 @@ export default function mongoosastic(schema: Schema, options: Options): void {
 		postSave(doc, options)
 		next()
 	})
+
+	schema.post('findOneAndUpdate', (doc: Document, next: HookNextFunction) => {
+		postSave(doc, options)
+		next()
+	})
+
+	schema.post('insertMany', (docs: Document[], next: HookNextFunction) => {
+		docs.forEach((doc) => postSave(doc, options))
+		next()
+	})
 }
