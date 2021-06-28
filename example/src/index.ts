@@ -30,6 +30,14 @@ app.post('/books', async (req, res) => {
 	})
 })
 
+app.put('/books/:id', async (req, res) => {
+	const { id } = req.params
+	const doc = await Books.findOneAndUpdate({ _id: id }, req.body )
+	res.send({
+		doc: doc
+	})
+})
+
 app.delete('/books/:id', async (req, res) => {
 	const { id } = req.params
 	const doc = await Books.findOneAndDelete({ _id: id })

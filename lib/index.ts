@@ -1,7 +1,10 @@
 import { Document, Schema, HookNextFunction } from 'mongoose'
 import { postSave, postRemove } from './hooks'
+import { getIndexName } from './methods'
 
 export default function mongoosastic(schema: Schema, options: Options): void {
+
+	schema.method('getIndexName', getIndexName)
 
 	schema.post('save', (doc: Document, next: HookNextFunction) => {
 		postSave(doc, options)

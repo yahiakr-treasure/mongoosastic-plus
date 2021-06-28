@@ -1,12 +1,16 @@
 import { Document } from 'mongoose'
-import { getIndexName, serialize } from './utils'
+import { deleteById, serialize } from './utils'
 import client from './esClient'
-import { ApiError } from '@elastic/elasticsearch'
+
+export function getIndexName(this: Document, indexName: string): string {
+	if (!indexName) return this.collection.name
+	else return indexName
+}
 
 export function index(doc: Document, options: Options, cb?: CallableFunction): void {
 	
 	const index = options && options.index
-	const indexName = getIndexName(doc, index)
+	const indexName = (doc as any).getIndexName(index)
 
 	const body = serialize(doc)
 	
@@ -26,7 +30,7 @@ export function unIndex(doc: Document, options: Options, cb?: CallableFunction):
 	}
 	
 	const index = options && options.index
-	const indexName = getIndexName(doc, index)
+	const indexName = (doc as any).getIndexName(index)
 	
 	const opt = {
 		index: indexName,
@@ -35,24 +39,4 @@ export function unIndex(doc: Document, options: Options, cb?: CallableFunction):
 	}
 	
 	deleteById(opt, cb)
-}
-
-export function deleteById(opt: Record<string, any>, cb?: CallableFunction): void {
-	
-	client.delete({
-		index: opt.index,
-		id: opt.id,
-	}, (err: ApiError) => {
-		if (err) {
-			if (opt.tries <= 0) {
-				if(cb) return cb(err)
-			}
-			opt.tries = --opt.tries
-			setTimeout(() => {
-				deleteById(opt, cb)
-			}, 500)
-		} else {
-			if(cb) cb(err)
-		}
-	})
 }
