@@ -1,5 +1,5 @@
 import { Document } from 'mongoose'
-import { index } from './methods'
+import { index, unIndex } from './methods'
 
 export function postSave(doc: Document, options: Options): void {
 
@@ -16,4 +16,8 @@ export function postSave(doc: Document, options: Options): void {
 			index(doc, options)
 		}
 	}
+}
+
+export function postRemove(doc: Document, options: Options): void {
+	unIndex(doc, options)
 }

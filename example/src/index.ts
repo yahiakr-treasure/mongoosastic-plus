@@ -30,6 +30,14 @@ app.post('/books', async (req, res) => {
 	})
 })
 
+app.delete('/books/:id', async (req, res) => {
+	const { id } = req.params
+	const doc = await Books.findOneAndDelete({ _id: id })
+	res.send({
+		doc: doc
+	})
+})
+
 app.listen(port, () => {
 	console.log(`Example app listening at http://localhost:${port}`)
 })
