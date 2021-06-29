@@ -7,35 +7,35 @@ export function getIndexName(this: Document, indexName: string): string {
 	else return indexName
 }
 
-export function index(doc: Document, options: Options, cb?: CallableFunction): void {
+export function index(this: Document, options: Options, cb?: CallableFunction): void {
 	
 	const index = options && options.index
-	const indexName = (doc as any).getIndexName(index)
+	const indexName = (this as any).getIndexName(index)
 
-	const body = serialize(doc)
+	const body = serialize(this)
 	
 	const opt = {
 		index: indexName,
-		id: doc._id.toString(),
+		id: this._id.toString(),
 		body: body
 	}
 
 	client.index(opt).then((value) => { if(cb) cb(value) })
 }
 
-export function unIndex(doc: Document, options: Options, cb?: CallableFunction): void {
+export function unIndex(this: Document, options: Options, cb?: CallableFunction): void {
 
-	if (!doc) {
+	if (!this) {
 		return
 	}
 	
 	const index = options && options.index
-	const indexName = (doc as any).getIndexName(index)
+	const indexName = (this as any).getIndexName(index)
 	
 	const opt = {
 		index: indexName,
 		tries: 3,
-		id: doc._id.toString(),
+		id: this._id.toString(),
 	}
 	
 	deleteById(opt, cb)

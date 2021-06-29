@@ -1,5 +1,4 @@
 import { Document } from 'mongoose'
-import { index, unIndex } from './methods'
 
 export function postSave(doc: Document, options: Options): void {
 
@@ -10,14 +9,14 @@ export function postSave(doc: Document, options: Options): void {
 				doc.populate(populateOpts)
 			})
 			doc.execPopulate().then(popDoc => {
-				index(popDoc, options)
+				(popDoc as any).index(options)
 			})
 		} else {
-			index(doc, options)
+			(doc as any).index(options)
 		}
 	}
 }
 
 export function postRemove(doc: Document, options: Options): void {
-	unIndex(doc, options)
+	(doc as any).unIndex(options)
 }
