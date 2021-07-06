@@ -32,7 +32,7 @@ app.post('/books', async (req, res) => {
 
 app.put('/books/:id', async (req, res) => {
 	const { id } = req.params
-	const doc = await Books.findOneAndUpdate({ _id: id }, req.body )
+	const doc = await Books.findOneAndUpdate({ _id: id }, req.body, { new: true })
 	res.send({
 		doc: doc
 	})

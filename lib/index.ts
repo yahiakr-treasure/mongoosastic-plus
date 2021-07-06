@@ -13,10 +13,14 @@ export default function mongoosastic(schema: Schema, options: Options): void {
 		next()
 	})
 
-	schema.post('findOneAndUpdate', function () {
-		this.find((this as any)._conditions).then(documents => {
-			documents.forEach((doc: Document) => postSave(doc, options))
-		})
+	schema.post('findOneAndUpdate', (doc: Document, next: HookNextFunction) => {
+		postSave(doc, options)
+		next()
+	})
+
+	schema.post('findByIdAndUpdate', (doc: Document, next: HookNextFunction) => {
+		postSave(doc, options)
+		next()
 	})
 
 	schema.post('insertMany', (docs: Document[], next: HookNextFunction) => {
