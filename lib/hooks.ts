@@ -3,6 +3,16 @@ import { options } from './index'
 
 export function postSave(doc: PluginDocument): void {
 
+	const filter = options && options.filter
+
+	function onIndex (err: any, res: any) {
+		if (!filter || !filter(doc)) {
+			doc.emit('es-indexed', err, res)
+		} else {
+			doc.emit('es-filtered', err, res)
+		}
+	}
+
 	const populate = options && options.populate
 	if (doc) {
 		if (populate && populate.length) {
@@ -10,10 +20,10 @@ export function postSave(doc: PluginDocument): void {
 				doc.populate(populateOpts)
 			})
 			doc.execPopulate().then(popDoc => {
-				popDoc.index()
+				popDoc.index(onIndex)
 			})
 		} else {
-			doc.index()
+			doc.index(onIndex)
 		}
 	}
 }

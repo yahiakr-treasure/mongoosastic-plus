@@ -16,6 +16,21 @@ app.get('/', (req, res) => {
 	res.send('Mongoosastic-plus usage example!')
 })
 
+app.get('/sync', () => {
+	const stream = (Books as any).synchronize()
+	let count = 0
+	stream.on('data', function () {
+		count++
+		console.log('index document with ES', count)
+	})
+	stream.on('close', function () {
+		console.log('number of legal texts indexed with ES is : ', count)
+	})
+	stream.on('error', function (err: any) {
+		console.log('there been an error', err)
+	})
+})
+
 app.get('/books', async (req, res) => {
 	const docs = await Books.find({})
 	res.send({

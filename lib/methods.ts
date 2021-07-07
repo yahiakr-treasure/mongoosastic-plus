@@ -1,5 +1,5 @@
 import { PluginDocument } from 'types'
-import { deleteById, getIndexName, serialize } from './utils'
+import { bulkIndex, deleteById, getIndexName, serialize } from './utils'
 import client from './esClient'
 
 export function index(this: PluginDocument, cb?: CallableFunction): void {
@@ -14,7 +14,13 @@ export function index(this: PluginDocument, cb?: CallableFunction): void {
 		body: body
 	}
 
-	client.index(opt).then((value) => { if(cb) cb(value) })
+	const bulk = true
+	if (bulk) {
+		bulkIndex(opt)
+		setImmediate(() => { if(cb) cb(null, this) })
+	} else {
+		client.index(opt).then((value) => { if(cb) cb(value) })
+	}
 }
 
 export function unIndex(this: PluginDocument, cb?: CallableFunction): void {

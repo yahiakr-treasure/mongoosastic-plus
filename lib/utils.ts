@@ -36,3 +36,46 @@ export function deleteById(opt: Record<string, any>, cb?: CallableFunction): voi
 		}
 	})
 }
+
+export function bulkIndex(opts: Record<string, any>): void {
+	const bulkBuffer: any[] = []
+	let bulkTimeout: any
+
+	bulkBuffer.push({
+		index: {
+			_index: opts.index,
+			_id: opts.id,
+			routing: opts.routing
+		}
+	}, opts.body)
+
+	if (bulkBuffer.length >= 1000) {
+		flush(bulkBuffer)
+		clearTimeout(bulkTimeout)
+	} else if (bulkTimeout === undefined) {
+		bulkTimeout = setTimeout(() => {
+			flush(bulkBuffer)
+			clearTimeout(bulkTimeout)
+		}, 1000)
+	}
+}
+
+function flush(bulkBuffer: any): void {
+	client.bulk({
+		body: bulkBuffer
+	}, (err, res) => {
+		if (err) console.log('There\'s an error in flush function')
+		else console.log('flush done!')
+		
+		// if (err) bulkErrEm.emit('error', err, res)
+		// if (res.items && res.items.length) {
+		// 	for (let i = 0; i < res.items.length; i++) {
+		// 		const info = res.items[i]
+		// 		if (info && info.index && info.index.error) {
+		// 			bulkErrEm.emit('error', null, info.index)
+		// 		}
+		// 	}
+		// }
+		// cb()
+	})
+}

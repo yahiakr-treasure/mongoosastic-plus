@@ -2,6 +2,7 @@ import { Schema } from 'mongoose'
 import { Options, PluginDocument } from 'types'
 import { postSave, postRemove } from './hooks'
 import { index, unIndex } from './methods'
+import { synchronize } from './statics'
 
 let globalOptions: Options
 
@@ -11,6 +12,8 @@ function mongoosastic(schema: Schema<PluginDocument>, options: Options): void {
 
 	schema.method('index', index)
 	schema.method('unIndex', unIndex)
+
+	schema.static('synchronize', synchronize)
 
 	schema.post('save', postSave)
 	schema.post('insertMany', (docs: PluginDocument[]) => docs.forEach((doc) => postSave(doc)))

@@ -3,6 +3,7 @@ import { Document, PopulateOptions } from 'mongoose'
 declare class PluginDocument extends Document {
 	index(cb?: CallableFunction): void
 	unIndex(cb?: CallableFunction): void
+	emit(event: string, ...args: any): void
 }
 
 declare type Options = {
@@ -12,7 +13,8 @@ declare type Options = {
         delay: number,
         size: number,
         batch: number,
-    }
+    },
+    filter(doc: Document): boolean,
 }
 
 export {
