@@ -1,6 +1,14 @@
 import { Document, LeanDocument } from 'mongoose'
+import { PluginDocument } from 'types'
 import { ApiError } from '@elastic/elasticsearch'
 import client from './esClient'
+import { options } from './index'
+
+export function getIndexName(doc: PluginDocument): string {
+	const indexName = options && options.index
+	if (!indexName) return doc.collection.name
+	else return indexName
+}
 
 export function serialize(doc: Document): LeanDocument<Document> {
 	const body = doc.toObject()

@@ -1,17 +1,10 @@
-import { Document } from 'mongoose'
-import { deleteById, serialize } from './utils'
+import { PluginDocument } from 'types'
+import { deleteById, getIndexName, serialize } from './utils'
 import client from './esClient'
-import { options } from './index'
 
-export function getIndexName(this: Document): string {
-	const indexName = options && options.index
-	if (!indexName) return this.collection.name
-	else return indexName
-}
-
-export function index(this: Document, cb?: CallableFunction): void {
+export function index(this: PluginDocument, cb?: CallableFunction): void {
 	
-	const indexName = (this as any).getIndexName()
+	const indexName = getIndexName(this)
 
 	const body = serialize(this)
 	
@@ -24,13 +17,13 @@ export function index(this: Document, cb?: CallableFunction): void {
 	client.index(opt).then((value) => { if(cb) cb(value) })
 }
 
-export function unIndex(this: Document, cb?: CallableFunction): void {
+export function unIndex(this: PluginDocument, cb?: CallableFunction): void {
 
 	if (!this) {
 		return
 	}
 	
-	const indexName = (this as any).getIndexName()
+	const indexName = getIndexName(this)
 	
 	const opt = {
 		index: indexName,

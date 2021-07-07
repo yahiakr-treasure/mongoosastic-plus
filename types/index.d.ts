@@ -1,16 +1,21 @@
-import { PopulateOptions } from 'mongoose'
+import { Document, PopulateOptions } from 'mongoose'
 
+declare class PluginDocument extends Document {
+	index(cb?: CallableFunction): void
+	unIndex(cb?: CallableFunction): void
+}
 
-declare global {
-    type Options = {
-        index: string,
-        populate: PopulateOptions[],
-        bulk: {
-            delay: number,
-            size: number,
-            batch: number,
-        }
+declare type Options = {
+    index: string,
+    populate: PopulateOptions[],
+    bulk: {
+        delay: number,
+        size: number,
+        batch: number,
     }
 }
 
-export {}
+export {
+	Options,
+	PluginDocument
+}
