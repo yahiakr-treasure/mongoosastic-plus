@@ -1,4 +1,4 @@
-import { Document, LeanDocument } from 'mongoose'
+import { LeanDocument } from 'mongoose'
 import { PluginDocument } from 'types'
 import { ApiError } from '@elastic/elasticsearch'
 import client from './esClient'
@@ -10,7 +10,7 @@ export function getIndexName(doc: PluginDocument): string {
 	else return indexName
 }
 
-export function serialize(doc: Document): LeanDocument<Document> {
+export function serialize(doc: PluginDocument): LeanDocument<PluginDocument> {
 	const body = doc.toObject()
 	delete body['_id']
 
