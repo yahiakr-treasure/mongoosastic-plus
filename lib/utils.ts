@@ -40,6 +40,29 @@ export function deleteById(opt: Record<string, any>, cb?: CallableFunction): voi
 	})
 }
 
+export function bulkAdd(opts: any): void {
+	const instruction = [{
+		index: {
+			_index: opts.index,
+			_id: opts.id,
+		}
+	}, opts.body]
+	
+	bulkIndex(instruction)
+}
+
+export function bulkDelete(opts: any, cb?: CallableFunction): void {
+	const instruction = [{
+		delete: {
+			_index: opts.index,
+			_id: opts.id,
+		}
+	}]
+	
+	bulkIndex(instruction)
+	if(cb) cb()
+}
+
 export function bulkIndex(instruction: any[]): void {
 
 	bulkBuffer = bulkBuffer.concat(instruction)

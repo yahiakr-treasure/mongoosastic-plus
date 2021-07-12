@@ -1,5 +1,5 @@
 import { PluginDocument } from 'types'
-import { bulkIndex, deleteById, getIndexName, serialize } from './utils'
+import { bulkAdd, bulkDelete, deleteById, getIndexName, serialize } from './utils'
 import client from './esClient'
 import { options } from './index'
 
@@ -16,16 +16,9 @@ export function index(this: PluginDocument, cb?: CallableFunction): void {
 	}
 		
 	if (options.bulk) {
-
-		const instruction = [{
-			index: {
-				_index: opt.index,
-				_id: opt.id,
-			}
-		}, opt.body]
-		
-		bulkIndex(instruction)
+		bulkAdd(opt)
 		setImmediate(() => { if(cb) cb(null, this) })
+
 	} else {
 		client.index(opt).then((value) => { if(cb) cb(value) })
 	}
@@ -44,6 +37,10 @@ export function unIndex(this: PluginDocument, cb?: CallableFunction): void {
 		tries: 3,
 		id: this._id.toString(),
 	}
-	
-	deleteById(opt, cb)
+
+	if (options.bulk) {
+		bulkDelete(opt, cb)
+	} else {
+		deleteById(opt, cb)
+	}
 }
