@@ -40,25 +40,24 @@ export function deleteById(opt: Record<string, any>, cb?: CallableFunction): voi
 	})
 }
 
-export function bulkIndex(opts: Record<string, any>): void {
+export function bulkIndex(instruction: any[]): void {
 
-	bulkBuffer.push({
-		index: {
-			_index: opts.index,
-			_id: opts.id,
-			routing: opts.routing
-		}
-	}, opts.body)
+	bulkBuffer = bulkBuffer.concat(instruction)
 
 	if (bulkBuffer.length >= options.bulk!.size) {
 		flush()
-		clearTimeout(bulkTimeout)
+		clearBulkTimeout()
 	} else if (bulkTimeout === undefined) {
 		bulkTimeout = setTimeout(() => {
 			flush()
-			clearTimeout(bulkTimeout)
+			clearBulkTimeout()
 		}, options.bulk!.delay)
 	}
+}
+
+function clearBulkTimeout() {
+	clearTimeout(bulkTimeout)
+	bulkTimeout = undefined
 }
 
 function flush(): void {

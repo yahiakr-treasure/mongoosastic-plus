@@ -1,6 +1,7 @@
 import events from 'events'
 import { FilterQuery, Model } from 'mongoose'
 import { PluginDocument } from 'types'
+import client from './esClient'
 import { postSave } from './hooks'
 import { options } from './index'
 
@@ -56,4 +57,10 @@ export function synchronize(this: Model<PluginDocument>, query: FilterQuery<Plug
 	})
 
 	return em
+}
+
+export function refresh(this: Model<PluginDocument>, cb?: any): void {
+	client.indices.refresh({
+		index: options.index || this.modelName
+	}, cb || null)
 }

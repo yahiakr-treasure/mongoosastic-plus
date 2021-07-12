@@ -16,7 +16,15 @@ export function index(this: PluginDocument, cb?: CallableFunction): void {
 	}
 		
 	if (options.bulk) {
-		bulkIndex(opt)
+
+		const instruction = [{
+			index: {
+				_index: opt.index,
+				_id: opt.id,
+			}
+		}, opt.body]
+		
+		bulkIndex(instruction)
 		setImmediate(() => { if(cb) cb(null, this) })
 	} else {
 		client.index(opt).then((value) => { if(cb) cb(value) })
