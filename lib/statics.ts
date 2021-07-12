@@ -1,3 +1,5 @@
+import { Context } from '@elastic/elasticsearch/api/types'
+import { callbackFn } from '@elastic/elasticsearch/lib/Helpers'
 import events from 'events'
 import { FilterQuery, Model } from 'mongoose'
 import { PluginDocument } from 'types'
@@ -41,12 +43,11 @@ export function synchronize(this: Model<PluginDocument>, query: FilterQuery<Plug
 		postSave(doc)
 	})
 
-	stream.on('close', (pA: any, pB: any) => {
-		const closeValues = [pA, pB]
+	stream.on('close', () => {
 		const closeInterval = setInterval(() => {
 			if (counter === 0) {
 				clearInterval(closeInterval)
-				em.emit('close', ...closeValues)
+				em.emit('close')
 				options.bulk = bulk
 			}
 		}, 1000)
@@ -59,8 +60,8 @@ export function synchronize(this: Model<PluginDocument>, query: FilterQuery<Plug
 	return em
 }
 
-export function refresh(this: Model<PluginDocument>, cb?: any): void {
+export function refresh(this: Model<PluginDocument>, cb: callbackFn<Response, Context>): void {
 	client.indices.refresh({
 		index: options.index || this.modelName
-	}, cb || null)
+	}, cb)
 }

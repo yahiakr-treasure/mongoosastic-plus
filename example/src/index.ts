@@ -16,7 +16,7 @@ app.get('/', (req, res) => {
 	res.send('Mongoosastic-plus usage example!')
 })
 
-app.get('/sync', () => {
+app.get('/sync', (req, res) => {
 	const stream = (Books as any).synchronize()
 	let count = 0
 	stream.on('data', function () {
@@ -29,6 +29,7 @@ app.get('/sync', () => {
 	stream.on('error', function (err: any) {
 		console.log('there been an error', err)
 	})
+	res.send('SYNCHRONIZING...')
 })
 
 app.get('/books', async (req, res) => {
