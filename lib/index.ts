@@ -6,7 +6,7 @@ import { synchronize } from './statics'
 
 let globalOptions: Options
 
-function mongoosastic(schema: Schema<PluginDocument>, options: Options): void {
+function mongoosastic(schema: Schema<PluginDocument>, options: Options = {}): void {
 
 	globalOptions = options
 

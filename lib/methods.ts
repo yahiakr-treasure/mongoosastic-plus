@@ -1,6 +1,7 @@
 import { PluginDocument } from 'types'
 import { bulkIndex, deleteById, getIndexName, serialize } from './utils'
 import client from './esClient'
+import { options } from './index'
 
 export function index(this: PluginDocument, cb?: CallableFunction): void {
 	
@@ -13,9 +14,8 @@ export function index(this: PluginDocument, cb?: CallableFunction): void {
 		id: this._id.toString(),
 		body: body
 	}
-
-	const bulk = true
-	if (bulk) {
+		
+	if (options.bulk) {
 		bulkIndex(opt)
 		setImmediate(() => { if(cb) cb(null, this) })
 	} else {

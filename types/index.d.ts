@@ -7,14 +7,14 @@ declare class PluginDocument extends Document {
 }
 
 declare type Options = {
-    index: string,
-    populate: PopulateOptions[],
-    bulk: {
+    index?: string,
+    populate?: PopulateOptions[],
+    bulk?: {
         delay: number,
         size: number,
         batch: number,
     },
-    filter(doc: Document): boolean,
+    filter?(doc: Document): boolean,
 }
 
 export {

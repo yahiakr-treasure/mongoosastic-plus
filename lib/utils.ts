@@ -4,6 +4,9 @@ import { ApiError } from '@elastic/elasticsearch'
 import client from './esClient'
 import { options } from './index'
 
+let bulkBuffer: any[] = []
+let bulkTimeout: any
+
 export function getIndexName(doc: PluginDocument): string {
 	const indexName = options && options.index
 	if (!indexName) return doc.collection.name
@@ -38,8 +41,6 @@ export function deleteById(opt: Record<string, any>, cb?: CallableFunction): voi
 }
 
 export function bulkIndex(opts: Record<string, any>): void {
-	const bulkBuffer: any[] = []
-	let bulkTimeout: any
 
 	bulkBuffer.push({
 		index: {
@@ -49,18 +50,18 @@ export function bulkIndex(opts: Record<string, any>): void {
 		}
 	}, opts.body)
 
-	if (bulkBuffer.length >= 1000) {
-		flush(bulkBuffer)
+	if (bulkBuffer.length >= options.bulk!.size) {
+		flush()
 		clearTimeout(bulkTimeout)
 	} else if (bulkTimeout === undefined) {
 		bulkTimeout = setTimeout(() => {
-			flush(bulkBuffer)
+			flush()
 			clearTimeout(bulkTimeout)
-		}, 1000)
+		}, options.bulk!.delay)
 	}
 }
 
-function flush(bulkBuffer: any): void {
+function flush(): void {
 	client.bulk({
 		body: bulkBuffer
 	}, (err, res) => {
@@ -78,4 +79,5 @@ function flush(bulkBuffer: any): void {
 		// }
 		// cb()
 	})
+	bulkBuffer = []
 }
