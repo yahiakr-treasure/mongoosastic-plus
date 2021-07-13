@@ -1,6 +1,6 @@
-import { LeanDocument } from 'mongoose'
+import { LeanDocument, Model } from 'mongoose'
 import { PluginDocument } from 'types'
-import { ApiError } from '@elastic/elasticsearch'
+import { ApiError, ApiResponse } from '@elastic/elasticsearch'
 import client from './esClient'
 import { options } from './index'
 
@@ -102,4 +102,75 @@ function flush(): void {
 		// cb()
 	})
 	bulkBuffer = []
+}
+
+export function hydrate (res: ApiResponse, model: Model<PluginDocument>, opts: any, cb: CallableFunction): void {
+	const results = res.body.hits
+	const resultsMap: Record<string, any> = {}
+	
+	const ids = results.hits.map((result: any, idx: any) => {
+		resultsMap[result._id] = idx
+		return result._id
+	})
+
+	const query = model.find({
+		_id: {
+			$in: ids
+		}
+	})
+	const hydrateOptions = opts.hydrateOptions
+
+	// Build Mongoose query based on hydrate options
+	// Example: {lean: true, sort: '-name', select: 'address name'}
+	query.setOptions(hydrateOptions)
+	// Object.keys(hydrateOptions).forEach(option => {
+	// 	query[option](hydrateOptions[option])
+	// })
+
+	query.exec((err, docs) => {
+		let hits
+		const docsMap: Record<string, PluginDocument> = {}
+
+		if (err) {
+			return cb(err)
+		}
+
+		if (!docs || docs.length === 0) {
+			results.hits = []
+			res.body.hits = results
+			return cb(null, res)
+		}
+
+		if (hydrateOptions.sort) {
+			// Hydrate sort has precedence over ES result order
+			hits = docs
+		} else {
+			// Preserve ES result ordering
+			docs.forEach(doc => {
+				docsMap[doc._id] = doc
+			})
+			hits = results.hits.map((result: any) => docsMap[result._id])
+		}
+
+		if (opts.highlight || opts.hydrateWithESResults) {
+			hits.forEach((doc: any) => {
+				const idx = resultsMap[doc._id]
+				if (opts.highlight) {
+					doc._highlight = results.hits[idx].highlight
+				}
+				if (opts.hydrateWithESResults) {
+					// Add to doc ES raw result (with, e.g., _score value)
+					doc._esResult = results.hits[idx]
+					if (!opts.hydrateWithESResults.source) {
+						// Remove heavy load
+						delete doc._esResult._source
+					}
+				}
+			})
+		}
+
+		results.hits = hits
+		res.body.hits = results
+		cb(null, res)
+	})
 }
