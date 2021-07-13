@@ -1,11 +1,19 @@
 import { LeanDocument, Model } from 'mongoose'
-import { PluginDocument } from 'types'
+import { EsSearchOptions, PluginDocument } from 'types'
 import { ApiError, ApiResponse } from '@elastic/elasticsearch'
 import client from './esClient'
 import { options } from './index'
 
 let bulkBuffer: any[] = []
 let bulkTimeout: any
+
+export function isString (subject: any): boolean {
+	return typeof subject === 'string'
+}
+  
+export function isStringArray (arr: any): boolean {
+	return arr.filter && arr.length === (arr.filter((item: any) => typeof item === 'string')).length
+}
 
 export function getIndexName(doc: PluginDocument): string {
 	const indexName = options && options.index
@@ -38,6 +46,14 @@ export function deleteById(opt: Record<string, any>, cb?: CallableFunction): voi
 			if(cb) cb(err)
 		}
 	})
+}
+
+export function reformatESTotalNumber(res: any): any {
+	Object.assign(res.body.hits, {
+		total: res.body.hits.total.value,
+		extTotal: res.body.hits.total
+	})
+	return res
 }
 
 export function bulkAdd(opts: any): void {
@@ -86,25 +102,22 @@ function clearBulkTimeout() {
 function flush(): void {
 	client.bulk({
 		body: bulkBuffer
-	}, (err, res) => {
-		if (err) console.log('There\'s an error in flush function')
-		else console.log('flush done!')
-		
+	}, (err: any, res: any) => {
 		// if (err) bulkErrEm.emit('error', err, res)
-		// if (res.items && res.items.length) {
-		// 	for (let i = 0; i < res.items.length; i++) {
-		// 		const info = res.items[i]
-		// 		if (info && info.index && info.index.error) {
-		// 			bulkErrEm.emit('error', null, info.index)
-		// 		}
-		// 	}
-		// }
+		if (res.items && res.items.length) {
+			for (let i = 0; i < res.items.length; i++) {
+				const info = res.items[i]
+				if (info && info.index && info.index.error) {
+					// bulkErrEm.emit('error', null, info.index)
+				}
+			}
+		}
 		// cb()
 	})
 	bulkBuffer = []
 }
 
-export function hydrate (res: ApiResponse, model: Model<PluginDocument>, opts: any, cb: CallableFunction): void {
+export function hydrate (res: ApiResponse, model: Model<PluginDocument>, opts: EsSearchOptions, cb: CallableFunction): void {
 	const results = res.body.hits
 	const resultsMap: Record<string, any> = {}
 	
@@ -118,11 +131,11 @@ export function hydrate (res: ApiResponse, model: Model<PluginDocument>, opts: a
 			$in: ids
 		}
 	})
-	const hydrateOptions = opts.hydrateOptions
+	const hydrateOptions = opts.hydrateOptions? opts.hydrateOptions : options.hydrateOptions
 
 	// Build Mongoose query based on hydrate options
 	// Example: {lean: true, sort: '-name', select: 'address name'}
-	query.setOptions(hydrateOptions)
+	query.setOptions(hydrateOptions!)
 	// Object.keys(hydrateOptions).forEach(option => {
 	// 	query[option](hydrateOptions[option])
 	// })
@@ -141,7 +154,7 @@ export function hydrate (res: ApiResponse, model: Model<PluginDocument>, opts: a
 			return cb(null, res)
 		}
 
-		if (hydrateOptions.sort) {
+		if (hydrateOptions!.sort) {
 			// Hydrate sort has precedence over ES result order
 			hits = docs
 		} else {

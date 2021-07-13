@@ -32,6 +32,23 @@ app.get('/sync', (req, res) => {
 	res.send('SYNCHRONIZING...')
 })
 
+app.get('/search', async (req, res) => {
+	const { q } = req.query
+
+	await (Books as any).search({
+		match: {
+			'title.fr': {
+				query: q
+			}
+		}
+	}, (err: any, results: any)=>{
+		if(err) console.error(err)
+		res.send({
+			docs: results
+		})
+	})
+})
+
 app.get('/books', async (req, res) => {
 	const docs = await Books.find({})
 	res.send({
