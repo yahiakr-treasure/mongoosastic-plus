@@ -4,7 +4,7 @@ import { callbackFn } from '@elastic/elasticsearch/lib/Helpers'
 import events from 'events'
 import { FilterQuery, Model } from 'mongoose'
 import { PluginDocument } from 'types'
-import client from './esClient'
+import { client } from './index'
 import { postSave } from './hooks'
 import { options } from './index'
 import { bulkDelete, reformatESTotalNumber } from './utils'
@@ -64,7 +64,7 @@ export function synchronize(this: Model<PluginDocument>, query: FilterQuery<Plug
 
 export function refresh(this: Model<PluginDocument>, cb: callbackFn<Response, Context>): void {
 	client.indices.refresh({
-		index: options.index || this.modelName
+		index: options.index || this.collection.name
 	}, cb)
 }
 

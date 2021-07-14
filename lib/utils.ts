@@ -1,7 +1,7 @@
 import { LeanDocument, Model } from 'mongoose'
 import { EsSearchOptions, PluginDocument } from 'types'
 import { ApiError, ApiResponse } from '@elastic/elasticsearch'
-import client from './esClient'
+import { client } from './index'
 import { options } from './index'
 
 let bulkBuffer: any[] = []

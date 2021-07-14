@@ -2,7 +2,7 @@ import { Search } from '@elastic/elasticsearch/api/requestParams'
 import { options } from './index'
 import { Model } from 'mongoose'
 import { EsSearchOptions, PluginDocument } from 'types'
-import client from './esClient'
+import { client } from './index'
 import { hydrate, isString, isStringArray, reformatESTotalNumber } from './utils'
 
 

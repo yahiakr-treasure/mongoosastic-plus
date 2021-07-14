@@ -1,4 +1,5 @@
-import { Aggregate, Aggregation, Highlight, Suggest } from '@elastic/elasticsearch/api/types'
+import { ClientOptions } from '@elastic/elasticsearch'
+import { Aggregation, Highlight, Suggest } from '@elastic/elasticsearch/api/types'
 import { Document, PopulateOptions, QueryOptions } from 'mongoose'
 
 declare class PluginDocument extends Document {
@@ -8,6 +9,7 @@ declare class PluginDocument extends Document {
 }
 
 declare type Options = {
+    clientOptions?: ClientOptions,
     index?: string,
     populate?: PopulateOptions[],
     bulk?: {

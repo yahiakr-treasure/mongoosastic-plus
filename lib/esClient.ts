@@ -1,4 +1,8 @@
 import { Client } from '@elastic/elasticsearch'
-const client = new Client({ node: 'http://localhost:9200' })
+import { Options } from 'types'
 
-export default client
+export function createEsClient(options: Options): Client {
+	
+	if(options.clientOptions) return new Client(options.clientOptions)
+	else return new Client({ node: 'http://localhost:9200' })
+}
