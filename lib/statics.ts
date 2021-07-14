@@ -7,7 +7,8 @@ import { PluginDocument } from 'types'
 import { client } from './index'
 import { postSave } from './hooks'
 import { options } from './index'
-import { bulkDelete, reformatESTotalNumber } from './utils'
+import { reformatESTotalNumber } from './utils'
+import { bulkDelete } from './bulking'
 
 export function synchronize(this: Model<PluginDocument>, query: FilterQuery<PluginDocument>): events {
 	const em = new events.EventEmitter()

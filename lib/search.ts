@@ -24,7 +24,7 @@ export function esSearch(this: Model<PluginDocument>, query: any, opts: EsSearch
 	const body = { highlight, suggest, aggs, min_score, routing, ...query }
 
 	const esQuery: Search = {
-		index: options.index || this.collection.name,
+		index: options.index || this.collection.name, 
 	}
 
 	if (opts.sort) {

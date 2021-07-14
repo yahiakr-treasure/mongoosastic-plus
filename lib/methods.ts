@@ -1,7 +1,8 @@
 import { PluginDocument } from 'types'
-import { bulkAdd, bulkDelete, deleteById, getIndexName, serialize } from './utils'
+import { deleteById, getIndexName, serialize } from './utils'
 import { client } from './index'
 import { options } from './index'
+import { bulkAdd, bulkDelete } from './bulking'
 
 export function index(this: PluginDocument, cb?: CallableFunction): void {
 	
