@@ -3,7 +3,7 @@ import { Options, PluginDocument } from 'types'
 import { postSave, postRemove } from './hooks'
 import { index, unIndex } from './methods'
 import { esSearch, search } from './search'
-import { synchronize } from './statics'
+import { esTruncate, synchronize } from './statics'
 
 let globalOptions: Options
 
@@ -15,6 +15,7 @@ function mongoosastic(schema: Schema<PluginDocument>, options: Options = {}): vo
 	schema.method('unIndex', unIndex)
 
 	schema.static('synchronize', synchronize)
+	schema.static('esTruncate', esTruncate)
 
 	schema.static('search', search)
 	schema.static('esSearch', esSearch)

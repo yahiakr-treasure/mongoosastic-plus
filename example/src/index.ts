@@ -49,6 +49,11 @@ app.get('/search', async (req, res) => {
 	})
 })
 
+app.get('/truncate', async (req, res) => {
+	(Books as any).esTruncate()
+	res.send('TRUNCATING...')
+})
+
 app.get('/books', async (req, res) => {
 	const docs = await Books.find({})
 	res.send({

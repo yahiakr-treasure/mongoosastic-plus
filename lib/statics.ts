@@ -1,3 +1,4 @@
+import { ApiError, ApiResponse } from '@elastic/elasticsearch'
 import { Context } from '@elastic/elasticsearch/api/types'
 import { callbackFn } from '@elastic/elasticsearch/lib/Helpers'
 import events from 'events'
@@ -6,6 +7,7 @@ import { PluginDocument } from 'types'
 import client from './esClient'
 import { postSave } from './hooks'
 import { options } from './index'
+import { bulkDelete, reformatESTotalNumber } from './utils'
 
 export function synchronize(this: Model<PluginDocument>, query: FilterQuery<PluginDocument>): events {
 	const em = new events.EventEmitter()
@@ -64,4 +66,54 @@ export function refresh(this: Model<PluginDocument>, cb: callbackFn<Response, Co
 	client.indices.refresh({
 		index: options.index || this.modelName
 	}, cb)
+}
+
+export function esTruncate(this: Model<PluginDocument>, cb?: CallableFunction): void {
+
+	const indexName = options.index || this.collection.name
+
+	const esQuery = {
+		index: indexName,
+		body: {
+			query: {
+				match_all: {}
+			}
+		}
+	}
+
+	// Set indexing to be bulk when synchronizing to make synchronizing faster
+	// Set default values when not present
+	const bulk = options.bulk
+	
+	options.bulk = {
+		delay: (options.bulk && options.bulk.delay) || 1000,
+		size: (options.bulk && options.bulk.size) || 1000,
+		batch: (options.bulk && options.bulk.batch) || 50
+	}
+
+	client.search(esQuery, (err: ApiError, res: ApiResponse) => {
+		if (err) {
+			if(cb) return cb(err)
+		}
+		res = reformatESTotalNumber(res)
+		if (res.body.hits.total) {
+			res.body.hits.hits.forEach((doc: any) => {
+				
+				const opts = {
+					index: indexName,
+					id: doc._id,
+					routing: undefined
+				}
+				
+				if (options.routing) {
+					doc._source._id = doc._id
+					opts.routing = options.routing(doc._source)
+				}
+
+				bulkDelete(opts)
+			})
+		}
+		options.bulk = bulk
+		if(cb) return cb()
+	})
 }

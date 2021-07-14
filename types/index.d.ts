@@ -16,6 +16,7 @@ declare type Options = {
         batch: number,
     },
     filter?(doc: Document): boolean,
+    routing?(doc: Document): any,
     alwaysHydrate?: boolean,
     hydrateOptions?: QueryOptions,
     transform?(doc: Document): Document,
