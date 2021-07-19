@@ -19,6 +19,23 @@ export function getIndexName(doc: PluginDocument): string {
 	else return indexName
 }
 
+export function filterMappingFromMixed (props: any): any {
+	const filteredMapping: Record<string, any> = {}
+	Object.keys(props).map((key) => {
+		const field = props[key]
+		if (field.type !== 'mixed') {
+			filteredMapping[key] = field
+			if (field.properties) {
+				filteredMapping[key].properties = filterMappingFromMixed(field.properties)
+				if (!Object.keys(filteredMapping[key].properties).length) {
+					delete filteredMapping[key].properties
+				}
+			}
+		}
+	})
+	return filteredMapping
+}
+
 export function serialize(doc: PluginDocument): LeanDocument<PluginDocument> {
 	const body = doc.toObject()
 	delete body['_id']

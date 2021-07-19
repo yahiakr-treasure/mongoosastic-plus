@@ -5,7 +5,7 @@ import { createEsClient } from './esClient'
 import { postSave, postRemove } from './hooks'
 import { index, unIndex } from './methods'
 import { esSearch, search } from './search'
-import { esTruncate, synchronize } from './statics'
+import { createMapping, esCount, esTruncate, refresh, synchronize } from './statics'
 
 let globalOptions: Options
 let client: Client
@@ -25,11 +25,14 @@ function mongoosastic(schema: Schema<PluginDocument>, options: Options = {}): vo
 	schema.static('search', search)
 	schema.static('esSearch', esSearch)
 
+	schema.static('createMapping', createMapping)
+	schema.static('refresh', refresh)
+	schema.static('esCount', esCount)
+
 	schema.post('save', postSave)
 	schema.post('insertMany', (docs: PluginDocument[]) => docs.forEach((doc) => postSave(doc)))
 
 	schema.post('findOneAndUpdate', postSave)
-	schema.post('findByIdAndUpdate', postSave)
 
 	schema.post(['findOneAndDelete', 'findOneAndRemove'], postRemove)
 }

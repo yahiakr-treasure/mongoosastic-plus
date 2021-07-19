@@ -24,6 +24,7 @@ export function esSearch(this: Model<PluginDocument>, query: any, opts: EsSearch
 	const body = { highlight, suggest, aggs, min_score, routing, ...query }
 
 	const esQuery: Search = {
+		body: body,
 		index: options.index || this.collection.name, 
 	}
 
@@ -32,10 +33,9 @@ export function esSearch(this: Model<PluginDocument>, query: any, opts: EsSearch
 			esQuery.sort = opts.sort
 		} else {
 			body.sort = opts.sort
+			esQuery.body = body
 		}
 	}
-
-	esQuery.body = body
 
 	Object.keys(opts).forEach(opt => {
 		if (!opt.match(/(hydrate|sort|aggs|highlight|suggest)/) && opts.hasOwnProperty(opt)) {

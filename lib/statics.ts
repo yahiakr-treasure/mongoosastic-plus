@@ -7,8 +7,60 @@ import { PluginDocument } from 'types'
 import { client } from './index'
 import { postSave } from './hooks'
 import { options } from './index'
-import { reformatESTotalNumber } from './utils'
+import { filterMappingFromMixed, reformatESTotalNumber } from './utils'
 import { bulkDelete } from './bulking'
+import Generator from './mapping'
+
+export function createMapping(this: Model<PluginDocument>, body: any, cb: CallableFunction): void {
+	
+	const indexName = options.index || this.collection.name
+	
+	const generator = new Generator()
+	const completeMapping = generator.generateMapping(this.schema)
+
+	const filtered = filterMappingFromMixed(completeMapping.properties)
+	completeMapping.properties = filtered
+
+	const properties = options.properties
+	if (properties) {
+		Object.keys(properties).map(key => {
+			completeMapping.properties[key] = properties[key]
+		})
+	}
+
+	client.indices.exists({
+		index: indexName
+	}, (err, exists) => {
+		if (err) {
+			return cb(err)
+		}
+
+		if (exists) {
+			return client.indices.putMapping({
+				index: indexName,
+				body: completeMapping
+			}, (err) => {
+				cb(err, completeMapping)
+			})
+		}
+
+		return client.indices.create({
+			index: indexName,
+			body: body
+		}, indexErr => {
+			if (indexErr) {
+				return cb(indexErr)
+			}
+
+			client.indices.putMapping({
+				index: indexName,
+				body: completeMapping
+			}, (err) => {
+				cb(err, completeMapping)
+			})
+		})
+	})
+}
 
 export function synchronize(this: Model<PluginDocument>, query: FilterQuery<PluginDocument>): events {
 	const em = new events.EventEmitter()
@@ -63,12 +115,6 @@ export function synchronize(this: Model<PluginDocument>, query: FilterQuery<Plug
 	return em
 }
 
-export function refresh(this: Model<PluginDocument>, cb: callbackFn<Response, Context>): void {
-	client.indices.refresh({
-		index: options.index || this.collection.name
-	}, cb)
-}
-
 export function esTruncate(this: Model<PluginDocument>, cb?: CallableFunction): void {
 
 	const indexName = options.index || this.collection.name
@@ -117,4 +163,29 @@ export function esTruncate(this: Model<PluginDocument>, cb?: CallableFunction): 
 		options.bulk = bulk
 		if(cb) return cb()
 	})
+}
+
+export function refresh(this: Model<PluginDocument>, cb: callbackFn<Response, Context>): void {
+	client.indices.refresh({
+		index: options.index || this.collection.name
+	}, cb)
+}
+
+export function esCount(this: Model<PluginDocument>, query: any, cb: callbackFn<Response, Context>): void {
+
+	if (!cb && typeof query === 'function') {
+		cb = query
+		query = {
+			match_all: {}
+		}
+	}
+
+	const esQuery = {
+		body: {
+			query: query
+		},
+		index: options.index || this.collection.name
+	}
+
+	client.count(esQuery, cb)
 }

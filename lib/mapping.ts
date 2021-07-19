@@ -288,13 +288,13 @@ function nestedSchema (paths: Record<string, any>, field: string, cleanTree: Rec
 }
 
 export default class Generator {
-	generateMapping(schema: any): Record<string, unknown> {
+	generateMapping(schema: any): Record<string, any> {
 		const cleanTree = getCleanTree(schema.tree, schema.paths, '', true)
 		delete cleanTree[schema.get('versionKey')]
 		const mapping = getMapping(cleanTree, '')
 		return { properties: mapping }
 	}
-	getCleanTree(schema: any): Record<string, unknown> {
+	getCleanTree(schema: any): Record<string, any> {
 		return getCleanTree(schema.tree, schema.paths, '', true)
 	}
 }

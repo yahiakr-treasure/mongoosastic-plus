@@ -23,6 +23,7 @@ declare type Options = {
     hydrateOptions?: QueryOptions,
     transform?(doc: Document): Document,
     indexAutomatically?: boolean,
+    properties?: any,
 }
 
 declare type EsSearchOptions = {
