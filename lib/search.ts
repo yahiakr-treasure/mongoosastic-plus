@@ -3,7 +3,7 @@ import { options } from './index'
 import { Model } from 'mongoose'
 import { EsSearchOptions, PluginDocument } from 'types'
 import { client } from './index'
-import { hydrate, isString, isStringArray, reformatESTotalNumber } from './utils'
+import { getIndexName, hydrate, isString, isStringArray, reformatESTotalNumber } from './utils'
 
 
 export function search(this: Model<PluginDocument>, query: any, opts: EsSearchOptions, cb: CallableFunction): void {
@@ -25,7 +25,7 @@ export function esSearch(this: Model<PluginDocument>, query: any, opts: EsSearch
 
 	const esQuery: Search = {
 		body: body,
-		index: options.index || this.collection.name, 
+		index: getIndexName(this), 
 	}
 
 	if (opts.sort) {

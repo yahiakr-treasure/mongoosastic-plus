@@ -13,9 +13,9 @@ export function isStringArray (arr: any): boolean {
 	return arr.filter && arr.length === (arr.filter((item: any) => typeof item === 'string')).length
 }
 
-export function getIndexName(doc: PluginDocument): string {
+export function getIndexName(doc: PluginDocument | Model<PluginDocument>): string {
 	const indexName = options && options.index
-	if (!indexName) return doc.collection.name
+	if (!indexName) return `${doc.collection.name}s`
 	else return indexName
 }
 

@@ -34,6 +34,7 @@ function mongoosastic(schema: Schema<PluginDocument>, options: Options = {}): vo
 
 	schema.post('findOneAndUpdate', postSave)
 
+	schema.post('remove', postRemove)
 	schema.post(['findOneAndDelete', 'findOneAndRemove'], postRemove)
 }
 

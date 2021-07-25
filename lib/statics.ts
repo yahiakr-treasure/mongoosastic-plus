@@ -7,13 +7,13 @@ import { PluginDocument } from 'types'
 import { client } from './index'
 import { postSave } from './hooks'
 import { options } from './index'
-import { filterMappingFromMixed, reformatESTotalNumber } from './utils'
+import { filterMappingFromMixed, getIndexName, reformatESTotalNumber } from './utils'
 import { bulkDelete } from './bulking'
 import Generator from './mapping'
 
 export function createMapping(this: Model<PluginDocument>, body: any, cb: CallableFunction): void {
 	
-	const indexName = options.index || this.collection.name
+	const indexName = getIndexName(this)
 	
 	const generator = new Generator()
 	const completeMapping = generator.generateMapping(this.schema)
@@ -117,7 +117,7 @@ export function synchronize(this: Model<PluginDocument>, query: FilterQuery<Plug
 
 export function esTruncate(this: Model<PluginDocument>, cb?: CallableFunction): void {
 
-	const indexName = options.index || this.collection.name
+	const indexName = getIndexName(this)
 
 	const esQuery = {
 		index: indexName,
@@ -167,7 +167,7 @@ export function esTruncate(this: Model<PluginDocument>, cb?: CallableFunction): 
 
 export function refresh(this: Model<PluginDocument>, cb: callbackFn<Response, Context>): void {
 	client.indices.refresh({
-		index: options.index || this.collection.name
+		index: getIndexName(this)
 	}, cb)
 }
 
@@ -184,7 +184,7 @@ export function esCount(this: Model<PluginDocument>, query: any, cb: callbackFn<
 		body: {
 			query: query
 		},
-		index: options.index || this.collection.name
+		index: getIndexName(this)
 	}
 
 	client.count(esQuery, cb)
