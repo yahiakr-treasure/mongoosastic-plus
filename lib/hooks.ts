@@ -1,7 +1,8 @@
 import { PluginDocument } from 'types'
-import { options } from './index'
 
 export function postSave(doc: PluginDocument): void {
+
+	const options = doc.esOptions()
 
 	const filter = options && options.filter
 

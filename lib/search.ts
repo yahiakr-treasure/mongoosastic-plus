@@ -1,5 +1,4 @@
 import { Search } from '@elastic/elasticsearch/api/requestParams'
-import { options } from './index'
 import { Model } from 'mongoose'
 import { EsSearchOptions, PluginDocument } from 'types'
 import { client } from './index'
@@ -18,6 +17,8 @@ export function search(this: Model<PluginDocument>, query: any, opts: EsSearchOp
 }
 
 export function esSearch(this: Model<PluginDocument>, query: any, opts: EsSearchOptions, cb: CallableFunction): void {
+
+	const options = (this as any).esOptions()
 
 	const { highlight, suggest, aggs, min_score, routing } = opts
 

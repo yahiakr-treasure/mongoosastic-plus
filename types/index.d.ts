@@ -6,6 +6,7 @@ declare class PluginDocument extends Document {
 	index(cb?: CallableFunction): void
 	unIndex(cb?: CallableFunction): void
 	emit(event: string, ...args: any): void
+	esOptions(): Options
 }
 
 declare type Options = {

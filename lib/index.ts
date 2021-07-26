@@ -7,12 +7,12 @@ import { index, unIndex } from './methods'
 import { esSearch, search } from './search'
 import { createMapping, esCount, esTruncate, refresh, synchronize } from './statics'
 
-let globalOptions: Options
 let client: Client
 
 function mongoosastic(schema: Schema<PluginDocument>, options: Options = {}): void {
 
-	globalOptions = options
+	schema.method('esOptions', () => { return options })
+	schema.static('esOptions', () => { return options })
 
 	client = createEsClient(options)
 
@@ -39,7 +39,6 @@ function mongoosastic(schema: Schema<PluginDocument>, options: Options = {}): vo
 }
 
 export {
-	globalOptions as options,
 	client
 }
 

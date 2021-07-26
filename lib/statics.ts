@@ -6,12 +6,13 @@ import { FilterQuery, Model } from 'mongoose'
 import { PluginDocument } from 'types'
 import { client } from './index'
 import { postSave } from './hooks'
-import { options } from './index'
 import { filterMappingFromMixed, getIndexName, reformatESTotalNumber } from './utils'
 import { bulkDelete } from './bulking'
 import Generator from './mapping'
 
 export function createMapping(this: Model<PluginDocument>, body: any, cb: CallableFunction): void {
+
+	const options = (this as any).esOptions()
 	
 	const indexName = getIndexName(this)
 	
@@ -63,6 +64,9 @@ export function createMapping(this: Model<PluginDocument>, body: any, cb: Callab
 }
 
 export function synchronize(this: Model<PluginDocument>, query: FilterQuery<PluginDocument>): events {
+
+	const options = (this as any).esOptions()
+
 	const em = new events.EventEmitter()
 	let counter = 0
 
@@ -116,6 +120,8 @@ export function synchronize(this: Model<PluginDocument>, query: FilterQuery<Plug
 }
 
 export function esTruncate(this: Model<PluginDocument>, cb?: CallableFunction): void {
+
+	const options = (this as any).esOptions()
 
 	const indexName = getIndexName(this)
 
