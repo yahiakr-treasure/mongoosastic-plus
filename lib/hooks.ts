@@ -34,5 +34,10 @@ export function postSave(doc: PluginDocument): void {
 }
 
 export function postRemove(doc: PluginDocument): void {
+	
+	if (!doc) {
+		return
+	}
+	
 	doc.unIndex()
 }

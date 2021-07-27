@@ -30,10 +30,6 @@ export function index(this: PluginDocument, cb?: CallableFunction): void {
 
 export function unIndex(this: PluginDocument, cb?: CallableFunction): void {
 
-	if (!this) {
-		return
-	}
-
 	const options = this.esOptions()
 	
 	const indexName = getIndexName(this)
@@ -42,7 +38,8 @@ export function unIndex(this: PluginDocument, cb?: CallableFunction): void {
 		index: indexName,
 		tries: 3,
 		id: this._id.toString(),
-		bulk: bulkOptions || options.bulk
+		bulk: bulkOptions || options.bulk,
+		model: this
 	}
 
 	if (opt.bulk) {

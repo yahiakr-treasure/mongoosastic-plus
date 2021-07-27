@@ -45,12 +45,15 @@ export function serialize(doc: PluginDocument): LeanDocument<PluginDocument> {
 
 export function deleteById(opt: Record<string, any>, cb?: CallableFunction): void {
 	
+	const model = opt.model
+	
 	client.delete({
 		index: opt.index,
 		id: opt.id,
-	}, (err: ApiError) => {
+	}, (err: ApiError, res: any) => {
 		if (err) {
 			if (opt.tries <= 0) {
+				model.emit('es-removed', err, res)
 				if(cb) return cb(err)
 			}
 			opt.tries = --opt.tries
@@ -58,6 +61,7 @@ export function deleteById(opt: Record<string, any>, cb?: CallableFunction): voi
 				deleteById(opt, cb)
 			}, 500)
 		} else {
+			model.emit('es-removed', err, res)
 			if(cb) cb(err)
 		}
 	})
