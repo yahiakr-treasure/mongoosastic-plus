@@ -2,6 +2,7 @@ import { PluginDocument } from 'types'
 import { deleteById, getIndexName, serialize } from './utils'
 import { client } from './index'
 import { bulkAdd, bulkDelete } from './bulking'
+import { bulkOptions } from './statics'
 
 export function index(this: PluginDocument, cb?: CallableFunction): void {
 
@@ -15,10 +16,10 @@ export function index(this: PluginDocument, cb?: CallableFunction): void {
 		index: indexName,
 		id: this._id.toString(),
 		body: body,
-		bulk: options.bulk
+		bulk: bulkOptions || options.bulk
 	}
 		
-	if (options.bulk) {
+	if (opt.bulk) {
 		bulkAdd(opt)
 		setImmediate(() => { if(cb) cb(null, this) })
 
@@ -41,10 +42,10 @@ export function unIndex(this: PluginDocument, cb?: CallableFunction): void {
 		index: indexName,
 		tries: 3,
 		id: this._id.toString(),
-		bulk: options.bulk
+		bulk: bulkOptions || options.bulk
 	}
 
-	if (options.bulk) {
+	if (opt.bulk) {
 		bulkDelete(opt, cb)
 	} else {
 		deleteById(opt, cb)

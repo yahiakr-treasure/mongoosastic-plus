@@ -10,6 +10,8 @@ import { filterMappingFromMixed, getIndexName, reformatESTotalNumber } from './u
 import { bulkDelete } from './bulking'
 import Generator from './mapping'
 
+let bulkOptions: any
+
 export function createMapping(this: Model<PluginDocument>, body: any, cb: CallableFunction): void {
 
 	const options = (this as any).esOptions()
@@ -72,15 +74,13 @@ export function synchronize(this: Model<PluginDocument>, query: FilterQuery<Plug
 
 	// Set indexing to be bulk when synchronizing to make synchronizing faster
 	// Set default values when not present
-	const bulk = options.bulk
-	
-	options.bulk = {
+	bulkOptions = {
 		delay: (options.bulk && options.bulk.delay) || 1000,
 		size: (options.bulk && options.bulk.size) || 1000,
 		batch: (options.bulk && options.bulk.batch) || 50
 	}
 
-	const stream = this.find(query).batchSize(options.bulk.batch).cursor()
+	const stream = this.find(query).batchSize(bulkOptions.batch).cursor()
 
 	stream.on('data', doc => {
 		stream.pause()
@@ -107,7 +107,7 @@ export function synchronize(this: Model<PluginDocument>, query: FilterQuery<Plug
 			if (counter === 0) {
 				clearInterval(closeInterval)
 				em.emit('close')
-				options.bulk = bulk
+				bulkOptions = undefined
 			}
 		}, 1000)
 	})
@@ -136,9 +136,7 @@ export function esTruncate(this: Model<PluginDocument>, cb?: CallableFunction): 
 
 	// Set indexing to be bulk when synchronizing to make synchronizing faster
 	// Set default values when not present
-	const bulk = options.bulk
-	
-	options.bulk = {
+	bulkOptions = {
 		delay: (options.bulk && options.bulk.delay) || 1000,
 		size: (options.bulk && options.bulk.size) || 1000,
 		batch: (options.bulk && options.bulk.batch) || 50
@@ -166,7 +164,7 @@ export function esTruncate(this: Model<PluginDocument>, cb?: CallableFunction): 
 				bulkDelete(opts)
 			})
 		}
-		options.bulk = bulk
+		bulkOptions = undefined
 		if(cb) return cb()
 	})
 }
@@ -194,4 +192,8 @@ export function esCount(this: Model<PluginDocument>, query: any, cb: callbackFn<
 	}
 
 	client.count(esQuery, cb)
+}
+
+export {
+	bulkOptions
 }

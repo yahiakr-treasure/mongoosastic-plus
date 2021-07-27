@@ -2,6 +2,10 @@ import { PluginDocument } from 'types'
 
 export function postSave(doc: PluginDocument): void {
 
+	if (!doc) {
+		return
+	}
+
 	const options = doc.esOptions()
 
 	const filter = options && options.filter
