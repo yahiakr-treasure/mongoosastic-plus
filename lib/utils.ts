@@ -15,7 +15,7 @@ export function isStringArray (arr: any): boolean {
 export function getIndexName(doc: PluginDocument | Model<PluginDocument>): string {
 	const options = (doc as any).esOptions()
 	const indexName = options && options.index
-	if (!indexName) return `${doc.collection.name}s`
+	if (!indexName) return doc.collection.name
 	else return indexName
 }
 
