@@ -17,14 +17,14 @@ BookSchema.plugin(mongoosastic, {
 	}
 })
 
-const Book = mongoose.model('Book2', BookSchema)
+const Book = mongoose.model('Book', BookSchema)
 
 describe('Bulk mode', function () {
 	beforeAll(function (done) {
-		config.deleteIndexIfExists(['book2s'], function () {
+		config.deleteIndexIfExists(['books'], function () {
 			mongoose.connect(config.mongoUrl, config.mongoOpts, function () {
 				const client = mongoose.connections[0].db
-				client.collection('book2s', function () {
+				client.collection('books', function () {
 					Book.deleteMany(done)
 				})
 			})
@@ -48,7 +48,7 @@ describe('Bulk mode', function () {
 	})
 
 	afterAll(function (done) {
-		config.deleteIndexIfExists(['book2s'], function () {
+		config.deleteIndexIfExists(['books'], function () {
 			Book.deleteMany(function () {
 				mongoose.disconnect()
 				done()
