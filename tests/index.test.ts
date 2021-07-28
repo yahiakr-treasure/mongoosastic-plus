@@ -61,7 +61,7 @@ TalkSchema.plugin(mongoosastic)
 PersonSchema.plugin(mongoosastic, {
 	index: 'people',
 	type: 'dude',
-	hydrate: true,
+	alwaysHydrate: true,
 	hydrateOptions: {
 		lean: true,
 		sort: '-name',
@@ -418,29 +418,35 @@ describe('indexing', function () {
 		})
 	})
 
-	// describe('Always hydrate', function () {
-	// 	beforeAll(function (done) {
-	// 		config.createModelAndEnsureIndex(Person, {
-	// 			name: 'James Carr',
-	// 			address: 'Exampleville, MO',
-	// 			phone: '(555)555-5555'
-	// 		}, done)
-	// 	})
+	describe('Always hydrate', function () {
+		beforeAll(function (done) {
+			config.createModelAndEnsureIndex(Person, {
+				name: 'James Carr',
+				address: 'Exampleville, MO',
+				phone: '(555)555-5555'
+			}, done)
+		})
 
-	// 	it('when gathering search results while respecting default hydrate options', function (done) {
-	// 		Person.search({
-	// 			query_string: {
-	// 				query: 'James'
-	// 			}
-	// 		}, function (err, res) {
-	// 			res.hits.hits[0].address.should.eql('Exampleville, MO')
-	// 			res.hits.hits[0].name.should.eql('James Carr')
-	// 			res.hits.hits[0].should.not.have.property('phone')
-	// 			res.hits.hits[0].should.not.be.an.instanceof(Person)
-	// 			done()
-	// 		})
-	// 	})
-	// })
+		it('when gathering search results while respecting default hydrate options', function (done) {
+			(Person as any).search({
+				query_string: {
+					query: 'James'
+				}
+			}, {}, function (err: any, res: any) {
+				console.log('Result:', res.body.hits.hits[0])
+				
+				// res.hits.hits[0].address.should.eql('Exampleville, MO')
+				expect(res.body.hits.hits[0].address).toEqual('Exampleville, MO')
+				// res.hits.hits[0].name.should.eql('James Carr')
+				expect(res.body.hits.hits[0].name).toEqual('James Carr')
+				// res.hits.hits[0].should.not.have.property('phone')
+				expect(res.body.hits.hits[0]).not.toHaveProperty('phone')
+				// res.hits.hits[0].should.not.be.an.instanceof(Person)
+				expect(res.body.hits.hits[0]).not.toBeInstanceOf(Person)
+				done()
+			})
+		})
+	})
 
 	// describe('Subset of Fields', function () {
 	// 	beforeAll(function (done) {
