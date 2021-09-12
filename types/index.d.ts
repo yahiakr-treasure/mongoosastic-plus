@@ -1,6 +1,6 @@
 import { ClientOptions } from '@elastic/elasticsearch'
 import { Aggregation, Highlight, Suggest } from '@elastic/elasticsearch/api/types'
-import { Document, PopulateOptions, QueryOptions } from 'mongoose'
+import { Document, Model, PopulateOptions, QueryOptions } from 'mongoose'
 
 declare class PluginDocument extends Document {
 	index(cb?: CallableFunction): void
@@ -25,6 +25,7 @@ declare type Options = {
     transform?(doc: Document): Document,
     indexAutomatically?: boolean,
     properties?: any,
+    customSerialize?(model: PluginDocument | Model<PluginDocument>, mapping: any): any;
 }
 
 declare type EsSearchOptions = {

@@ -433,8 +433,6 @@ describe('indexing', function () {
 					query: 'James'
 				}
 			}, {}, function (err: any, res: any) {
-				console.log('Result:', res.body.hits.hits[0])
-				
 				// res.hits.hits[0].address.should.eql('Exampleville, MO')
 				expect(res.body.hits.hits[0].address).toEqual('Exampleville, MO')
 				// res.hits.hits[0].name.should.eql('James Carr')
