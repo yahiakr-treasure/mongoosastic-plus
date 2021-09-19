@@ -74,13 +74,14 @@ export function synchronize(this: Model<PluginDocument>, query: FilterQuery<Plug
 
 	// Set indexing to be bulk when synchronizing to make synchronizing faster
 	// Set default values when not present
-	bulkOptions = {
+	const bulkOptions = options.bulk
+	options.bulk = {
 		delay: (options.bulk && options.bulk.delay) || 1000,
 		size: (options.bulk && options.bulk.size) || 1000,
 		batch: (options.bulk && options.bulk.batch) || 50
 	}
 
-	const stream = this.find(query).batchSize(bulkOptions.batch).cursor()
+	const stream = this.find(query).batchSize(options.bulk.batch).cursor()
 
 	stream.on('data', doc => {
 		stream.pause()
@@ -107,7 +108,7 @@ export function synchronize(this: Model<PluginDocument>, query: FilterQuery<Plug
 			if (counter === 0) {
 				clearInterval(closeInterval)
 				em.emit('close')
-				bulkOptions = undefined
+				options.bulk = bulkOptions
 			}
 		}, 1000)
 	})

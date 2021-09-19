@@ -50,7 +50,10 @@ function flush(): void {
 	client.bulk({
 		body: bulkBuffer
 	}, (err: any, res: any) => {
-		// if (err) bulkErrEm.emit('error', err, res)
+		if (err) {
+			console.log('Bulking error!')
+			// bulkErrEm.emit('error', err, res)
+		}
 		if (res.items && res.items.length) {
 			for (let i = 0; i < res.items.length; i++) {
 				const info = res.items[i]

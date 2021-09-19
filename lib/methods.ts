@@ -2,7 +2,6 @@ import { PluginDocument } from 'types'
 import { deleteById, getIndexName, serialize } from './utils'
 import { client } from './index'
 import { bulkAdd, bulkDelete } from './bulking'
-import { bulkOptions } from './statics'
 import Generator from './mapping'
 
 export function index(this: PluginDocument, cb?: CallableFunction): void {
@@ -25,7 +24,7 @@ export function index(this: PluginDocument, cb?: CallableFunction): void {
 		index: indexName,
 		id: this._id.toString(),
 		body: body,
-		bulk: bulkOptions || options.bulk
+		bulk: options.bulk
 	}
 
 	if (opt.bulk) {
@@ -47,7 +46,7 @@ export function unIndex(this: PluginDocument, cb?: CallableFunction): void {
 		index: indexName,
 		tries: 3,
 		id: this._id.toString(),
-		bulk: bulkOptions || options.bulk,
+		bulk: options.bulk,
 		model: this
 	}
 

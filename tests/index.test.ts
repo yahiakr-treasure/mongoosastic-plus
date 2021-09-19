@@ -1,10 +1,9 @@
 'use strict'
 
-import mongoose, { Document, Schema } from 'mongoose'
+import mongoose, { Schema } from 'mongoose'
 import { config } from './config'
 import mongoosastic from '../lib/index'
 import { Tweet } from './models/tweet'
-import { AnyCnameRecord } from 'dns'
 
 const esClient = config.getClient()
 
@@ -85,42 +84,33 @@ const Dog = mongoose.model('dog', DogSchema)
 
 // -- alright let's test this shiznit!
 describe('indexing', function () {
-	beforeAll(function (done) {
-		mongoose.connect(config.mongoUrl, config.mongoOpts, function () {
-			config.deleteDocs([Tweet, Person, Talk, Bum, Dog], function () {
-				config.deleteIndexIfExists(['tweets', 'talks', 'people', 'ms_sample', 'dogs'], function () {
-					setTimeout(done, config.INDEXING_TIMEOUT as number)
-				})
-			})
+	
+	beforeAll(function () {
+		mongoose.connect(config.mongoUrl, config.mongoOpts, async function () {
+			await config.deleteDocs([Tweet, Person, Talk, Bum, Dog])
+			await config.deleteIndexIfExists(['tweets', 'talks', 'people', 'ms_sample', 'dogs'])
 		})
 	})
 
-	afterAll(function (done) {
-		config.deleteDocs([Tweet, Person, Talk, Bum, Dog], function () {
-			config.deleteIndexIfExists(['tweets', 'talks', 'people', 'ms_sample', 'dogs'], function () {
-				mongoose.disconnect()
-				// Talk.esClient.close()
-				// Person.esClient.close()
-				// Bum.esClient.close()
-				esClient.close()
-				done()
-			})
-		})
+	afterAll(async function () {
+		await config.deleteDocs([Tweet, Person, Talk, Bum, Dog])
+		await config.deleteIndexIfExists(['tweets', 'talks', 'people', 'ms_sample', 'dogs'])
+		
+		mongoose.disconnect()
+		esClient.close()
 	})
 
 	describe('Creating Index', function () {
 		it('should create index if none exists', function (done) {
-			(Tweet as any).createMapping(undefined, function (err: any, response: any) {
-				// should.exists(response)
+			Tweet.createMapping(undefined, function (err: any, response: any) {
 				expect(response).toBeTruthy()
-				// response.should.not.have.property('error')
 				expect(response).not.toHaveProperty('error')
 				done()
 			})
 		})
 
 		it('should create index with settings if none exists', function (done) {
-			(Tweet as any).createMapping({
+			Tweet.createMapping({
 				analysis: {
 					analyzer: {
 						stem: {
@@ -137,14 +127,14 @@ describe('indexing', function () {
 		})
 
 		it('should update index if one already exists', function (done) {
-			(Tweet as any).createMapping(undefined, function (err: any, response: any) {
+			Tweet.createMapping(undefined, function (err: any, response: any) {
 				expect(response).not.toHaveProperty('error')
 				done()
 			})
 		})
 
-		afterAll(function (done) {
-			config.deleteIndexIfExists(['tweets', 'talks', 'people'], done)
+		afterAll(async function () {
+			await config.deleteIndexIfExists(['tweets', 'talks', 'people'])
 		})
 	})
 
@@ -158,37 +148,30 @@ describe('indexing', function () {
 			}, done)
 		})
 
-		it('should use the model\'s id as ES id', function (done) {
-			Tweet.findOne({
-				message: 'I like Riak better'
-			}, function (err: any, doc: any) {
-				esClient.get({
-					index: 'tweets',
-					id: doc._id.toString()
-				}, function (_err: any, res: any) {
-					// res._source.message.should.eql(doc.message)
-					expect(res.body._source.message).toEqual(doc.message)
-					done()
-				})
+		it('should use the model\'s id as ES id', async function () {
+			const doc = await Tweet.findOne({ message: 'I like Riak better' })
+			const esDoc = await esClient.get({
+				index: 'tweets',
+				id: doc?.get('_id').toString()
 			})
+			
+			expect(esDoc.body._source.message).toEqual(doc?.get('message'))
 		})
 
 		it('should be able to execute a simple query', function (done) {
-			(Tweet as any).search({
+			Tweet.search({
 				query_string: {
 					query: 'Riak'
 				}
 			}, {}, function (err: any, results: any) {
-				// results.hits.total.should.eql(1)
 				expect(results.body.hits.total).toEqual(1)
-				// results.hits.hits[0]._source.message.should.eql('I like Riak better')
 				expect(results.body.hits.hits[0]._source.message).toEqual('I like Riak better')
 				done()
 			})
 		})
 
 		it('should be able to execute a simple query', function (done) {
-			(Tweet as any).search({
+			Tweet.search({
 				query_string: {
 					query: 'jamescarr'
 				}
@@ -199,26 +182,27 @@ describe('indexing', function () {
 			})
 		})
 
-		it('should reindex when findOneAndUpdate', function (done) {
-			Tweet.findOneAndUpdate({
+		it('should reindex when findOneAndUpdate', async function(done) {
+			const doc = await Tweet.findOneAndUpdate({
 				message: 'I like Riak better'
 			}, {
 				message: 'I like Jack better'
 			}, {
 				new: true
-			}, function () {
-				setTimeout(function () {
-					(Tweet as any).search({
-						query_string: {
-							query: 'Jack'
-						}
-					}, {}, function (err: any, results: any) {
-						expect(results.body.hits.total).toEqual(1)
-						expect(results.body.hits.hits[0]._source.message).toEqual('I like Jack better')
-						done()
-					})
-				}, config.INDEXING_TIMEOUT as number)
 			})
+
+			setTimeout(function() {
+				Tweet.search({
+					query_string: {
+						query: 'Jack'
+					}
+				}, {}, function (err: any, results: any) {
+					expect(results.body.hits.total).toEqual(1)
+					expect(results.body.hits.hits[0]._source.message).toEqual('I like Jack better')
+					done()
+				})
+			}, config.INDEXING_TIMEOUT)
+
 		})
 
 		it('should be able to execute findOneAndUpdate if document doesn\'t exist', function (done) {
@@ -229,45 +213,44 @@ describe('indexing', function () {
 			}, {
 				new: true
 			}, function (err, doc) {
-				// should.not.exist(err)
-				// should.not.exist(doc)
 				expect(err).toBeFalsy()
 				expect(doc).toBeFalsy()
 				done()
 			})
 		})
 
-		// it('should be able to index with insertMany', async function (done) {
-		// 	const tweets = [{
-		// 		message: 'insertMany 1'
-		// 	}, {
-		// 		message: 'insertMany 2'
-		// 	}]
+		it('should be able to index with insertMany', async function (done) {
+			const tweets = [{
+				message: 'insertMany 1'
+			}, {
+				message: 'insertMany 2'
+			}]
 
-		// 	await Tweet.insertMany(tweets);
+			await Tweet.insertMany(tweets)
 
-		// 	(Tweet as any).search({
-		// 		query_string: {
-		// 			query: 'insertMany'
-		// 		}
-		// 	}, {}, (error: any, results: any) => {
-		// 		// results.hits.total.should.eql(2)
-				
-		// 		expect(results.body.hits.total).toEqual(2)
-		// 		const expected = tweets.map((doc) => doc.message)
-		// 		const searched = results.body.hits.hits.map((doc: any) => doc._source.message)
-		// 		// should(expected.sort()).be.eql(searched.sort())
-		// 		expect(expected.sort()).toEqual(searched.sort())
-		// 	})
-		// })
+			setTimeout(function() {
+				Tweet.search({
+					query_string: {
+						query: 'insertMany'
+					}
+				}, {}, (error: any, results: any) => {
+					
+					expect(results.body.hits.total).toEqual(2)
+
+					const expected = tweets.map((doc) => doc.message)
+					const searched = results.body.hits.hits.map((doc: any) => doc._source.message)
+
+					expect(expected.sort()).toEqual(searched.sort())
+					done()
+				})
+			}, config.INDEXING_TIMEOUT)
+		})
 
 		it('should report errors', function (done) {
-			(Tweet as any).search({
+			Tweet.search({
 				queriez: 'jamescarr'
 			}, {}, function (err: any, results: any) {
-				// err.message.should.match(/(SearchPhaseExecutionException|parsing_exception)/)
 				expect(err.message).toMatch(/(SearchPhaseExecutionException|parsing_exception)/)
-				// should.not.exist(results)
 				expect(results).toBeFalsy()
 				done()
 			})
@@ -275,7 +258,9 @@ describe('indexing', function () {
 	})
 
 	describe('Removing', function () {
+
 		let tweet: any = null
+
 		beforeEach(function (done) {
 			tweet = new Tweet({
 				user: 'jamescarr',
@@ -284,25 +269,25 @@ describe('indexing', function () {
 			config.createModelAndEnsureIndex(Tweet, tweet, done)
 		})
 
-		it('should remove from index when model is removed', function (done) {
-			tweet.remove(function () {
-				setTimeout(function () {
-					(Tweet as any).search({
-						query_string: {
-							query: 'shouldnt'
-						}
-					}, {}, function (err: any, res: any) {
-						expect(res.body.hits.total).toEqual(0)
-						done()
-					})
-				}, config.INDEXING_TIMEOUT as number)
-			})
+		it('should remove from index when model is removed', async function (done) {
+			await tweet.remove()
+
+			setTimeout(function () {
+				Tweet.search({
+					query_string: {
+						query: 'shouldnt'
+					}
+				}, {}, function (err: any, res: any) {
+					expect(res.body.hits.total).toEqual(0)
+					done()
+				})
+			}, config.INDEXING_TIMEOUT)
 		})
 
 		it('should remove only index', function (done) {
 			tweet.on('es-removed', function () {
 				setTimeout(function () {
-					(Tweet as any).search({
+					Tweet.search({
 						query_string: {
 							query: 'shouldnt'
 						}
@@ -310,7 +295,7 @@ describe('indexing', function () {
 						expect(res.body.hits.total).toEqual(0)
 						done()
 					})
-				}, config.INDEXING_TIMEOUT as number)
+				}, config.INDEXING_TIMEOUT)
 			})
 
 			tweet.unIndex()
@@ -325,9 +310,7 @@ describe('indexing', function () {
 				triggerRemoved = true
 			})
 			tweet.unIndex(function (err: any) {
-				// should.exist(err)
 				expect(err).toBeTruthy()
-				// triggerRemoved.should.eql(true)
 				expect(triggerRemoved).toEqual(true)
 				done()
 			})
@@ -342,7 +325,7 @@ describe('indexing', function () {
 			config.createModelAndEnsureIndex(Tweet, tweet, function () {
 				Tweet.findByIdAndRemove(tweet._id, {}, () => {
 					setTimeout(function () {
-						(Tweet as any).search({
+						Tweet.search({
 							query_string: {
 								query: 'findOneAndRemove'
 							}
@@ -350,7 +333,7 @@ describe('indexing', function () {
 							expect(res.body.hits.total).toEqual(0)
 							done()
 						})
-					}, config.INDEXING_TIMEOUT as number)
+					}, config.INDEXING_TIMEOUT)
 				})
 			})
 		})
@@ -367,7 +350,8 @@ describe('indexing', function () {
 	})
 
 	describe('Isolated Models', function () {
-		beforeAll(function (done) {
+
+		beforeAll(async function (done) {
 			const talk = new Talk({
 				speaker: '',
 				year: 2013,
@@ -380,38 +364,34 @@ describe('indexing', function () {
 				message: 'Go see the big lebowski',
 				post_date: new Date()
 			})
-			tweet.save(function () {
-				talk.save(function () {
-					talk.on('es-indexed', function () {
-						setTimeout(done, config.INDEXING_TIMEOUT as number)
-					})
-				})
+
+			await tweet.save()
+			await talk.save()
+
+			talk.on('es-indexed', function () {
+				setTimeout(done, config.INDEXING_TIMEOUT as number)
 			})
 		})
 
 		it('should only find models of type Tweet', function (done) {
-			(Tweet as any).search({
+			Tweet.search({
 				query_string: {
 					query: 'Dude'
 				}
 			}, {}, function (err: any, res: any) {
-				// res.hits.total.should.eql(1)
 				expect(res.body.hits.total).toEqual(1)
-				// res.hits.hits[0]._source.user.should.eql('Dude')
 				expect(res.body.hits.hits[0]._source.user).toEqual('Dude')
 				done()
 			})
 		})
 
 		it('should only find models of type Talk', function (done) {
-			(Talk as any).search({
+			Talk.search({
 				query_string: {
 					query: 'Dude'
 				}
 			}, {}, function (err: any, res: any) {
-				// res.hits.total.should.eql(1)
 				expect(res.body.hits.total).toEqual(1)
-				// res.hits.hits[0]._source.title.should.eql('Dude')
 				expect(res.body.hits.hits[0]._source.title).toEqual('Dude')
 				done()
 			})
@@ -428,24 +408,20 @@ describe('indexing', function () {
 		})
 
 		it('when gathering search results while respecting default hydrate options', function (done) {
-			(Person as any).search({
+			Person.search({
 				query_string: {
 					query: 'James'
 				}
 			}, {}, function (err: any, res: any) {
-				// res.hits.hits[0].address.should.eql('Exampleville, MO')
 				expect(res.body.hits.hits[0].address).toEqual('Exampleville, MO')
-				// res.hits.hits[0].name.should.eql('James Carr')
 				expect(res.body.hits.hits[0].name).toEqual('James Carr')
-				// res.hits.hits[0].should.not.have.property('phone')
 				expect(res.body.hits.hits[0]).not.toHaveProperty('phone')
-				// res.hits.hits[0].should.not.be.an.instanceof(Person)
 				expect(res.body.hits.hits[0]).not.toBeInstanceOf(Person)
 				done()
 			})
 		})
 	})
-
+	
 	// describe('Subset of Fields', function () {
 	// 	beforeAll(function (done) {
 	// 		config.createModelAndEnsureIndex(Talk, {

@@ -1,66 +1,57 @@
 'use strict'
 
 import { Client } from '@elastic/elasticsearch'
-import async, { ErrorCallback } from 'async'
-import { Model } from 'mongoose'
+import { toInteger } from 'lodash'
+import { MongoosasticModel } from 'mongoose'
 import { PluginDocument } from 'types'
 
 const esClient = new Client({ node: 'http://localhost:9200' })
 
-const INDEXING_TIMEOUT = process.env.INDEXING_TIMEOUT || 2000
-const BULK_ACTION_TIMEOUT = process.env.BULK_ACTION_TIMEOUT || 4000
+const INDEXING_TIMEOUT: number = toInteger(process.env.INDEXING_TIMEOUT) || 2000
+const BULK_ACTION_TIMEOUT: number = toInteger(process.env.BULK_ACTION_TIMEOUT) || 4000
 
-function deleteIndexIfExists(indexes: Array<string>, done: ErrorCallback): void {
-	async.forEach(indexes, function (index, cb) {
-		esClient.indices.exists({
-			index: index
-		}, function (err, exists) {
-			if (exists) {
-				esClient.indices.delete({
-					index: index
-				}, cb)
-			} else {
-				cb()
-			}
-		})
-	}, done)
+async function deleteIndexIfExists(indexes: Array<string>): Promise<void> {
+	for (const index of indexes) {
+		const { body } = await esClient.indices.exists({ index: index })
+		if(body) await esClient.indices.delete({ index: index })
+	}
 }
 
-function deleteDocs(models: Array<Model<PluginDocument>>, done: ErrorCallback): void {
-	async.forEach(models, function (model, cb) {
-		model.deleteMany(cb)
-	}, done)
+async function deleteDocs(models: Array<MongoosasticModel<PluginDocument>>): Promise<void> {
+	for (const model of models) {
+		await model.deleteMany()
+	}
 }
 
-function createModelAndEnsureIndex(Model: Model<any>, obj: any, cb: CallableFunction): void {
+function createModelAndEnsureIndex(Model: MongoosasticModel<PluginDocument>, obj: any, cb: CallableFunction): void {
 	const doc = new Model(obj)
-	doc.save(function (err: any) {
+	doc.save(function (err) {
 		if (err) return cb(err)
-
+		
 		doc.on('es-indexed', function () {
 			setTimeout(function () {
 				cb(null, doc)
-			}, (INDEXING_TIMEOUT as number))
+			}, INDEXING_TIMEOUT)
 		})
 	})
 }
 
-function createModelAndSave (Model: Model<any>, obj: any, cb: CallableFunction) {
+async function createModelAndSave (Model: MongoosasticModel<PluginDocument>, obj: any): Promise<PluginDocument> {
 	const dude = new Model(obj)
-	dude.save(cb)
+	return await dude.save()
 }
 
-function saveAndWaitIndex (Model: any, cb: any) {
-	Model.save(function (err: any) {
+function saveAndWaitIndex (doc: PluginDocument, cb: CallableFunction): void {
+	doc.save(function (err) {
 		if (err) cb(err)
 		else {
-			Model.once('es-indexed', cb)
-			Model.once('es-filtered', cb)
+			doc.once('es-indexed', cb)
+			doc.once('es-filtered', cb)
 		}
 	})
 }
 
-function bookTitlesArray () {
+function bookTitlesArray(): Array<string> {
 	const books = [
 		'American Gods',
 		'Gods of the Old World',
@@ -68,7 +59,7 @@ function bookTitlesArray () {
 	]
 	let idx
 	for (idx = 0; idx < 50; idx++) {
-		books.push('ABABABA' + idx)
+		books.push('Random title ' + idx)
 	}
 	return books
 }
