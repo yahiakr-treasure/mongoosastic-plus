@@ -329,8 +329,8 @@ describe('indexing', function () {
 							query_string: {
 								query: 'findOneAndRemove'
 							}
-						}, {}, function (err: any, res: any) {
-							expect(res.body.hits.total).toEqual(0)
+						}, {}, function (err, res) {
+							expect(res?.body.hits.total).toEqual(0)
 							done()
 						})
 					}, config.INDEXING_TIMEOUT)
@@ -422,162 +422,165 @@ describe('indexing', function () {
 		})
 	})
 	
-	// describe('Subset of Fields', function () {
-	// 	beforeAll(function (done) {
-	// 		config.createModelAndEnsureIndex(Talk, {
-	// 			speaker: 'James Carr',
-	// 			year: 2013,
-	// 			title: 'Node.js Rocks',
-	// 			abstract: 'I told you node.js was cool. Listen to me!',
-	// 			bio: 'One awesome dude.'
-	// 		}, done)
-	// 	})
+	describe('Subset of Fields', function () {
+		beforeAll(function (done) {
+			config.createModelAndEnsureIndex(Talk, {
+				speaker: 'James Carr',
+				year: 2013,
+				title: 'Node.js Rocks',
+				abstract: 'I told you node.js was cool. Listen to me!',
+				bio: 'One awesome dude.'
+			}, done)
+		})
 
-	// 	it('should only return indexed fields', function (done) {
-	// 		Talk.search({
-	// 			query_string: {
-	// 				query: 'cool'
-	// 			}
-	// 		}, function (err, res) {
-	// 			const talk = res.hits.hits[0]._source
+		it('should only return indexed fields', function (done) {
+			Talk.search({
+				query_string: {
+					query: 'cool'
+				}
+			}, {}, function (err, res) {
+				const talk = res?.body.hits.hits[0]._source
 
-	// 			res.hits.total.should.eql(1)
-	// 			talk.should.have.property('title')
-	// 			talk.should.have.property('year')
-	// 			talk.should.have.property('abstract')
-	// 			talk.should.not.have.property('speaker')
-	// 			talk.should.not.have.property('bio')
-	// 			done()
-	// 		})
-	// 	})
+				expect(res?.body.hits.total).toEqual(1)
+				expect(talk).toHaveProperty('title')
+				expect(talk).toHaveProperty('year')
+				expect(talk).toHaveProperty('abstract')
+				expect(talk).not.toHaveProperty('speaker')
+				expect(talk).not.toHaveProperty('bio')
+				done()
+			})
+		})
 
-	// 	it('should hydrate returned documents if desired', function (done) {
-	// 		Talk.search({
-	// 			query_string: {
-	// 				query: 'cool'
-	// 			}
-	// 		}, {
-	// 			hydrate: true
-	// 		}, function (err, res) {
-	// 			const talk = res.hits.hits[0]
+		it('should hydrate returned documents if desired', function (done) {
+			Talk.search({
+				query_string: {
+					query: 'cool'
+				}
+			}, {
+				hydrate: true
+			}, function (err, res) {
+				const talk = res?.body.hits.hits[0]
 
-	// 			res.hits.total.should.eql(1)
-	// 			talk.should.have.property('title')
-	// 			talk.should.have.property('year')
-	// 			talk.should.have.property('abstract')
-	// 			talk.should.have.property('speaker')
-	// 			talk.should.have.property('bio')
-	// 			talk.should.be.an.instanceof(Talk)
-	// 			done()
-	// 		})
-	// 	})
+				expect(res?.body.hits.total).toEqual(1)
+				expect(talk).toHaveProperty('title')
+				expect(talk).toHaveProperty('year')
+				expect(talk).toHaveProperty('abstract')
+				expect(talk).toHaveProperty('speaker')
+				expect(talk).toHaveProperty('bio')
+				expect(talk).toBeInstanceOf(Talk)
+				done()
+			})
+		})
 
-	// 	describe('Sub-object Fields', function () {
-	// 		beforeAll(function (done) {
-	// 			config.createModelAndEnsureIndex(Person, {
-	// 				name: 'Bob Carr',
-	// 				address: 'Exampleville, MO',
-	// 				phone: '(555)555-5555',
-	// 				life: {
-	// 					born: 1950,
-	// 					other: 2000
-	// 				}
-	// 			}, done)
-	// 		})
+		describe('Sub-object Fields', function () {
+			beforeAll(function (done) {
+				config.createModelAndEnsureIndex(Person, {
+					name: 'Bob Carr',
+					address: 'Exampleville, MO',
+					phone: '(555)555-5555',
+					life: {
+						born: 1950,
+						other: 2000
+					}
+				}, done)
+			})
 
-	// 		it('should only return indexed fields and have indexed sub-objects', function (done) {
-	// 			Person.search({
-	// 				query_string: {
-	// 					query: 'Bob'
-	// 				}
-	// 			}, function (err, res) {
-	// 				res.hits.hits[0].address.should.eql('Exampleville, MO')
-	// 				res.hits.hits[0].name.should.eql('Bob Carr')
-	// 				res.hits.hits[0].should.have.property('life')
-	// 				res.hits.hits[0].life.born.should.eql(1950)
-	// 				res.hits.hits[0].life.should.not.have.property('died')
-	// 				res.hits.hits[0].life.should.not.have.property('other')
-	// 				res.hits.hits[0].should.not.have.property('phone')
-	// 				res.hits.hits[0].should.not.be.an.instanceof(Person)
-	// 				done()
-	// 			})
-	// 		})
-	// 	})
+			it('should only return indexed fields and have indexed sub-objects', function (done) {
+				Person.search({
+					query_string: {
+						query: 'Bob'
+					}
+				}, {}, function (err, res) {
+					const hit = res?.body.hits.hits[0] as any
 
-	// 	it('should allow extra query options when hydrating', function (done) {
-	// 		Talk.search({
-	// 			query_string: {
-	// 				query: 'cool'
-	// 			}
-	// 		}, {
-	// 			hydrate: true,
-	// 			hydrateOptions: {
-	// 				lean: true
-	// 			}
-	// 		}, function (err, res) {
-	// 			const talk = res.hits.hits[0]
+					expect(hit.address).toEqual('Exampleville, MO')
+					expect(hit.name).toEqual('Bob Carr')					
+					expect(hit).toHaveProperty('life')
+					expect(hit.life.born).toEqual(1950)
+					expect(hit.life).not.toHaveProperty('died')
+					expect(hit.life).not.toHaveProperty('other')
+					expect(hit).not.toHaveProperty('phone')
+					expect(hit).not.toBeInstanceOf(Person)
+					done()
+				})
+			})
+		})
 
-	// 			res.hits.total.should.eql(1)
-	// 			talk.should.have.property('title')
-	// 			talk.should.have.property('year')
-	// 			talk.should.have.property('abstract')
-	// 			talk.should.have.property('speaker')
-	// 			talk.should.have.property('bio')
-	// 			talk.should.not.be.an.instanceof(Talk)
-	// 			done()
-	// 		})
-	// 	})
-	// })
+		it('should allow extra query options when hydrating', function (done) {
+			Talk.search({
+				query_string: {
+					query: 'cool'
+				}
+			}, {
+				hydrate: true,
+				hydrateOptions: {
+					lean: true
+				}
+			}, function (err, res) {
+				const talk = res?.body.hits.hits[0]
 
-	// describe('Existing Index', function () {
-	// 	beforeAll(function (done) {
-	// 		config.deleteIndexIfExists(['ms_sample'], function () {
-	// 			esClient.indices.create({
-	// 				index: 'ms_sample',
-	// 				body: {
-	// 					mappings: {
-	// 						properties: {
-	// 							name: {
-	// 								type: 'text'
-	// 							}
-	// 						}
-	// 					}
-	// 				}
-	// 			}, done)
-	// 		})
-	// 	})
+				expect(res?.body.hits.total).toEqual(1)
+				expect(talk).toHaveProperty('title')
+				expect(talk).toHaveProperty('year')
+				expect(talk).toHaveProperty('abstract')
+				expect(talk).toHaveProperty('speaker')
+				expect(talk).toHaveProperty('bio')
+				expect(talk).not.toBeInstanceOf(Talk)
+				done()
+			})
+		})
+	})
 
-	// 	it('should just work', function (done) {
-	// 		config.createModelAndEnsureIndex(Bum, {
-	// 			name: 'Roger Wilson'
-	// 		}, function () {
-	// 			Bum.search({
-	// 				query_string: {
-	// 					query: 'Wilson'
-	// 				}
-	// 			}, function (err, results) {
-	// 				results.hits.total.should.eql(1)
-	// 				done()
-	// 			})
-	// 		})
-	// 	})
-	// })
+	describe('Existing Index', function () {
+		beforeAll(async function () {
+			await config.deleteIndexIfExists(['ms_sample'])
+			await esClient.indices.create({
+				index: 'ms_sample',
+				body: {
+					mappings: {
+						properties: {
+							name: {
+								type: 'text'
+							}
+						}
+					}
+				}
+			})
+		})
 
-	// describe('Disable automatic indexing', function () {
-	// 	it('should save but not index', function (done) {
-	// 		const newDog = new Dog({ name: 'Sparky' })
-	// 		newDog.save(function () {
-	// 			let whoopsIndexed = false
+		it('should just work', function (done) {
+			config.createModelAndEnsureIndex(Bum, {
+				name: 'Roger Wilson'
+			}, function () {
+				Bum.search({
+					query_string: {
+						query: 'Wilson'
+					}
+				}, {}, function (err, results) {
+					expect(results?.body.hits.total).toEqual(1)
+					done()
+				})
+			})
+		})
+	})
 
-	// 			newDog.on('es-indexed', function () {
-	// 				whoopsIndexed = true
-	// 			})
+	describe('Disable automatic indexing', function () {
 
-	// 			setTimeout(function () {
-	// 				whoopsIndexed.should.be.false()
-	// 				done()
-	// 			}, config.INDEXING_TIMEOUT)
-	// 		})
-	// 	})
-	// })
+		it('should save but not index', async function (done) {
+			const newDog = new Dog({ name: 'Sparky' })
+
+			let whoopsIndexed = false
+
+			await newDog.save()
+
+			newDog.on('es-indexed', function () {
+				whoopsIndexed = true
+			})
+
+			setTimeout(function () {
+				expect(whoopsIndexed).toBeFalsy()
+				done()
+			}, config.INDEXING_TIMEOUT)
+		})
+	})
 })

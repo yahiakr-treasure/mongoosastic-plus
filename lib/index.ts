@@ -9,7 +9,13 @@ import { createMapping, esCount, esTruncate, refresh, synchronize } from './stat
 
 let client: Client
 
+const defaultOptions = {
+	indexAutomatically: true
+}
+
 function mongoosastic(schema: Schema<PluginDocument>, options: Options = {}): void {
+
+	options = { ...defaultOptions, ...options }
 
 	schema.method('esOptions', () => { return options })
 	schema.static('esOptions', () => { return options })
@@ -29,13 +35,15 @@ function mongoosastic(schema: Schema<PluginDocument>, options: Options = {}): vo
 	schema.static('refresh', refresh)
 	schema.static('esCount', esCount)
 
-	schema.post('save', postSave)
-	schema.post('insertMany', (docs: PluginDocument[]) => docs.forEach((doc) => postSave(doc)))
+	if(options.indexAutomatically) {
+		schema.post('save', postSave)
+		schema.post('insertMany', (docs: PluginDocument[]) => docs.forEach((doc) => postSave(doc)))
 
-	schema.post('findOneAndUpdate', postSave)
+		schema.post('findOneAndUpdate', postSave)
 
-	schema.post('remove', postRemove)
-	schema.post(['findOneAndDelete', 'findOneAndRemove'], postRemove)
+		schema.post('remove', postRemove)
+		schema.post(['findOneAndDelete', 'findOneAndRemove'], postRemove)
+	}
 }
 
 export {

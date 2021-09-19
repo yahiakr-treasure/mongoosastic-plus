@@ -153,7 +153,7 @@ export function hydrate(res: ApiResponse, model: Model<PluginDocument>, opts: Es
 			return cb(null, res)
 		}
 
-		if (hydrateOptions!.sort) {
+		if (hydrateOptions && hydrateOptions!.sort) {
 			// Hydrate sort has precedence over ES result order
 			hits = docs
 		} else {
