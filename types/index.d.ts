@@ -57,7 +57,7 @@ declare type Options = {
     routing?(doc: Document): any,
     alwaysHydrate?: boolean,
     hydrateOptions?: QueryOptions,
-    transform?(doc: Document): Document,
+    transform?(doc: any, ...args: any): any,
     indexAutomatically?: boolean,
     properties?: any,
     customSerialize?(model: PluginDocument | Model<PluginDocument>, mapping: any): any;

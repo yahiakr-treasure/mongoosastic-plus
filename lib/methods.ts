@@ -20,6 +20,8 @@ export function index(this: PluginDocument, cb?: CallableFunction): void {
 		body = serialize(this, mapping)
 	}
 
+	if (options.transform) body = options.transform(body, this)
+
 	const opt = {
 		index: indexName,
 		id: this._id.toString(),
