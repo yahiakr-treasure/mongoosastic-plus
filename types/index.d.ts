@@ -67,10 +67,10 @@ declare type Options = {
 declare type EsSearchOptions = {
     highlight?: Highlight,
     suggest?: Suggest,
-    aggs?: Aggregation,
+    aggs?: any,
     min_score?: any,
     routing?: string,
-    sort?: string | string[],
+    sort?: any,
     hydrate?: boolean,
     hydrateOptions?: QueryOptions,
     hydrateWithESResults?: any
