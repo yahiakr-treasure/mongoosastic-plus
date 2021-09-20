@@ -86,12 +86,17 @@ declare module 'mongoosastic' {
 declare module 'mongoose' {
     export function model<T extends PluginDocument>(name: string, schema?: Schema<T>, collection?: string, skipInit?: boolean): MongoosasticModel<T>;
     export interface MongoosasticModel<T extends Document> extends Model<T> {
-        search(query: any, options: EsSearchOptions, cb?: SearchCallbackFn<T>): void;
-        esSearch(query: any, options: EsSearchOptions, cb?: SearchCallbackFn<T>): void;
+        search(query: any, cb?: SearchCallbackFn<T>): void;
+        search(query: any, options?: EsSearchOptions, cb?: SearchCallbackFn<T>): void;
+
+        esSearch(query: any, cb?: SearchCallbackFn<T>): void;
+        esSearch(query: any, options?: EsSearchOptions, cb?: SearchCallbackFn<T>): void;
+
         synchronize(query?: any, options?: any): EventEmitter;
         esOptions(): Options
         createMapping(body?: any, cb?: SearchCallbackFn<T>): void
         esTruncate(cb?: SearchCallbackFn<T>): void
+
         esCount(cb?: callbackFn<Response, Context>): void
         esCount(query?: any, cb?: callbackFn<Response, Context>): void
     }
