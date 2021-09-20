@@ -2,7 +2,7 @@ import { ApiError, ApiResponse } from '@elastic/elasticsearch'
 import { Context } from '@elastic/elasticsearch/api/types'
 import { callbackFn } from '@elastic/elasticsearch/lib/Helpers'
 import events from 'events'
-import { FilterQuery, Model, MongoosasticModel } from 'mongoose'
+import { FilterQuery, Model } from 'mongoose'
 import { PluginDocument } from 'types'
 import { client } from './index'
 import { postSave } from './hooks'
@@ -11,6 +11,11 @@ import { bulkDelete } from './bulking'
 import Generator from './mapping'
 
 export function createMapping(this: Model<PluginDocument>, body: any, cb: CallableFunction): void {
+
+	if (arguments.length < 2) {
+		cb = body
+		body = undefined
+	}
 
 	const options = (this as any).esOptions()
 	
