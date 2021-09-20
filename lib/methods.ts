@@ -4,11 +4,16 @@ import { client } from './index'
 import { bulkAdd, bulkDelete } from './bulking'
 import Generator from './mapping'
 
-export function index(this: PluginDocument, cb?: CallableFunction): void {
+export function index(this: PluginDocument, inOpts: any = {}, cb?: CallableFunction): void {
+
+	if (arguments.length < 2) {
+		cb = inOpts
+		inOpts = {}
+	}
 
 	const options = this.esOptions()
 
-	const indexName = getIndexName(this)
+	const indexName = inOpts.index ? inOpts.index : getIndexName(this)
 
 	const generator = new Generator()
 	const mapping = generator.generateMapping(this.schema)

@@ -65,6 +65,7 @@ declare type Options = {
 }
 
 declare type EsSearchOptions = {
+    index?: string,
     highlight?: Highlight,
     suggest?: any,
     aggs?: any,
