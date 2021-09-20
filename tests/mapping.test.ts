@@ -497,7 +497,6 @@ describe('MappingGenerator', function () {
 		})
 	})
 
-	/*
 	describe('elastic search fields', function () {
 		it('type can be overridden', function (done) {
 			const schema = new Schema({
@@ -509,7 +508,8 @@ describe('MappingGenerator', function () {
 
 			const mapping = generator.generateMapping(schema)
 
-			mapping.properties.name.type.should.eql('date')
+			// mapping.properties.name.type.should.eql('date')
+			expect(mapping.properties.name.type).toEqual('date')
 			done()
 		})
 
@@ -523,7 +523,8 @@ describe('MappingGenerator', function () {
 
 			const mapping = generator.generateMapping(schema)
 
-			mapping.properties.name.boost.should.eql(2.2)
+			// mapping.properties.name.boost.should.eql(2.2)
+			expect(mapping.properties.name.boost).toEqual(2.2)
 			done()
 		})
 
@@ -554,12 +555,12 @@ describe('MappingGenerator', function () {
 
 			const mapping = generator.generateMapping(schema)
 
-			mapping.properties.should.have.property('explicit_field_1')
-			mapping.properties.should.have.property('explicit_field_2')
-			mapping.properties.should.have.property('explicit_field_3')
-			mapping.properties.should.not.have.property('implicit_field_1')
-			mapping.properties.should.not.have.property('implicit_field_2')
-			mapping.properties.should.not.have.property('implicit_field_3')
+			expect(mapping.properties).toHaveProperty('explicit_field_1')
+			expect(mapping.properties).toHaveProperty('explicit_field_2')
+			expect(mapping.properties).toHaveProperty('explicit_field_3')
+			expect(mapping.properties).not.toHaveProperty('implicit_field_1')
+			expect(mapping.properties).not.toHaveProperty('implicit_field_2')
+			expect(mapping.properties).not.toHaveProperty('implicit_field_3')
 			done()
 		})
 
@@ -580,9 +581,9 @@ describe('MappingGenerator', function () {
 
 			const mapping = generator.generateMapping(schema)
 
-			mapping.properties.should.have.property('id')
-			mapping.properties.should.not.have.property('name')
-			mapping.properties.should.not.have.property('_id')
+			expect(mapping.properties).toHaveProperty('id')
+			expect(mapping.properties).not.toHaveProperty('name')
+			expect(mapping.properties).not.toHaveProperty('_id')
 			done()
 		})
 
@@ -598,8 +599,8 @@ describe('MappingGenerator', function () {
 
 			const mapping = generator.generateMapping(schema)
 
-			mapping.properties.should.have.property('implicit_field_1')
-			mapping.properties.should.have.property('implicit_field_2')
+			expect(mapping.properties).toHaveProperty('implicit_field_1')
+			expect(mapping.properties).toHaveProperty('implicit_field_2')
 			done()
 		})
 	})
@@ -617,8 +618,10 @@ describe('MappingGenerator', function () {
 
 			const mapping = generator.generateMapping(schema)
 
-			mapping.properties.name.properties.firstName.type.should.eql('text')
-			mapping.properties.name.properties.lastName.type.should.eql('text')
+			// mapping.properties.name.properties.firstName.type.should.eql('text')
+			expect(mapping.properties.name.properties.firstName.type).toEqual('text')
+			// mapping.properties.name.properties.lastName.type.should.eql('text')
+			expect(mapping.properties.name.properties.lastName.type).toEqual('text')
 			done()
 		})
 
@@ -634,8 +637,10 @@ describe('MappingGenerator', function () {
 
 			const mapping = generator.generateMapping(schema)
 
-			mapping.properties.name.properties.firstName.type.should.eql('text')
-			should.not.exist(mapping.properties.name.properties.lastName)
+			// mapping.properties.name.properties.firstName.type.should.eql('text')
+			expect(mapping.properties.name.properties.firstName.type).toEqual('text')
+			// should.not.exist(mapping.properties.name.properties.lastName)
+			expect(mapping.properties.name.properties.lastName).toBeUndefined()
 			done()
 		})
 
@@ -654,8 +659,10 @@ describe('MappingGenerator', function () {
 
 			const mapping = generator.generateMapping(schema)
 
-			mapping.properties.name.properties.firstName.type.should.eql('text')
-			mapping.properties.name.properties.lastName.type.should.eql('text')
+			// mapping.properties.name.properties.firstName.type.should.eql('text')
+			expect(mapping.properties.name.properties.firstName.type).toEqual('text')
+			// mapping.properties.name.properties.lastName.type.should.eql('text')
+			expect(mapping.properties.name.properties.lastName.type).toEqual('text')
 			done()
 		})
 
@@ -674,8 +681,10 @@ describe('MappingGenerator', function () {
 
 			const mapping = generator.generateMapping(schema)
 
-			mapping.properties.name.properties.firstName.type.should.eql('text')
-			should.not.exist(mapping.properties.name.properties.lastName)
+			// mapping.properties.name.properties.firstName.type.should.eql('text')
+			expect(mapping.properties.name.properties.firstName.type).toEqual('text')
+			// should.not.exist(mapping.properties.name.properties.lastName)
+			expect(mapping.properties.name.properties.lastName).toBeUndefined()
 			done()
 		})
 
@@ -706,9 +715,10 @@ describe('MappingGenerator', function () {
 
 			const mapping = generator.generateMapping(schema)
 
-			mapping.properties.locations.properties.coordinates.type.should.eql('geo_point')
+			// mapping.properties.locations.properties.coordinates.type.should.eql('geo_point')
+			expect(mapping.properties.locations.properties.coordinates.type).toEqual('geo_point')
 			done()
 		})
 	})
-	*/
+
 })
