@@ -1,7 +1,6 @@
 'use strict'
 
 import mongoose, { Schema } from 'mongoose'
-import async from 'async'
 import { config } from './config'
 import mongoosastic from '../lib/index'
 
@@ -24,42 +23,32 @@ BookSchema.pre('save', function (next) {
 const Book = mongoose.model('Book', BookSchema)
 
 describe('Synchronize', () => {
+	
 	let books: any
 
-	const clearData = (cb: CallableFunction) => {
-		config.deleteIndexIfExists(['books'], () => {
-			mongoose.connect(config.mongoUrl, config.mongoOpts, () => {
-				const client = mongoose.connections[0].db
-				client.collection('books', (err, _books) => {
-					books = _books
-					Book.deleteMany(cb)
-				})
-			})
-		})
-	}
-
-	afterAll(done => {
-		Book.deleteMany(function () {
-			config.deleteIndexIfExists(['books'], () => {
-				// Book.esClient.close()
-				mongoose.disconnect()
-				done()
-			})
-		})
+	afterAll(async function() {
+		await Book.deleteMany()
+		await config.deleteIndexIfExists(['books'])
+		mongoose.disconnect()
 	})
 
 	describe('an existing collection with invalid field values', () => {
-		beforeAll(done => {
-			clearData(() => {
-				async.forEach(config.bookTitlesArray(), (title, cb) => {
-					books.insertOne({
-						title: title
-					}, cb)
-				}, () => {
-					books.insertOne({
-					}, done)
+
+		beforeAll(async function() {
+			await config.deleteIndexIfExists(['books'])
+			await mongoose.connect(config.mongoUrl, config.mongoOpts)
+			const client = mongoose.connections[0].db
+			books = client.collection('books')
+			
+			await Book.deleteMany()
+
+			for (const title of config.bookTitlesArray()) {
+				await books.insertOne({
+					title: title
 				})
-			})
+			}
+
+			await books.insertOne({})
 		})
 
 		it('should index all but one document', done => {
@@ -74,10 +63,10 @@ describe('Synchronize', () => {
 				errorCount += 1
 			})
 			stream.on('close', () => {
-				// count.should.eql(53)
+
 				expect(count).toEqual(53)
-				// saveCounter.should.eql(count)
 				expect(saveCounter).toEqual(count)
+				expect(errorCount).toEqual(1)
 
 				setTimeout(() => {
 					Book.search({
@@ -85,12 +74,8 @@ describe('Synchronize', () => {
 							query: 'American'
 						}
 					}, {}, (err, results) => {
-						try {
-							expect(results?.body.hits.total).toEqual(2)
-							expect(errorCount).toEqual(1)
-						} catch (error) {
-							done(error)	
-						}
+						expect(results?.body.hits.total).toEqual(2)
+						done()
 					})
 				}, config.INDEXING_TIMEOUT)
 			})
@@ -98,30 +83,33 @@ describe('Synchronize', () => {
 	})
 
 	describe('an existing collection', () => {
-		beforeAll(done => {
-			clearData(() => {
-				async.forEach(config.bookTitlesArray(), (title, cb) => {
-					books.insertOne({
-						title: title
-					}, cb)
-				}, done)
-			})
+
+		beforeAll(async function() {
+			await config.deleteIndexIfExists(['books'])
+			await mongoose.connect(config.mongoUrl, config.mongoOpts)
+			const client = mongoose.connections[0].db
+			books = client.collection('books')
+			
+			await Book.deleteMany()
+
+			for (const title of config.bookTitlesArray()) {
+				await books.insertOne({
+					title: title
+				})
+			}
 		})
 
 		it('should index all existing objects', done => {
 			saveCounter = 0
-			const stream = Book.synchronize()
 			let count = 0
-			// const stream = Book.synchronize({}, {saveOnSynchronize: true}), // default behaviour
+			const stream = Book.synchronize()
 
 			stream.on('data', () => {
 				count++
 			})
 
 			stream.on('close', () => {
-				// count.should.eql(53)
 				expect(count).toEqual(53)
-				// saveCounter.should.eql(count)
 				expect(saveCounter).toEqual(count)
 
 				setTimeout(() => {
@@ -130,7 +118,6 @@ describe('Synchronize', () => {
 							query: 'American'
 						}
 					}, {}, (err, results) => {
-						// results.hits.total.should.eql(2)
 						expect(results?.body.hits.total).toEqual(2)
 						done()
 					})
@@ -149,7 +136,6 @@ describe('Synchronize', () => {
 
 			stream.on('close', () => {
 				expect(count).toEqual(53)
-				// saveCounter.should.eql(count)
 				expect(saveCounter).toEqual(0)
 
 				setTimeout(() => {
@@ -158,7 +144,6 @@ describe('Synchronize', () => {
 							query: 'American'
 						}
 					}, {}, (err, results) => {
-						// results.hits.total.should.eql(2)
 						expect(results?.body.hits.total).toEqual(2)
 						done()
 					})

@@ -2,7 +2,7 @@ import { ApiError, ApiResponse } from '@elastic/elasticsearch'
 import { Context } from '@elastic/elasticsearch/api/types'
 import { callbackFn } from '@elastic/elasticsearch/lib/Helpers'
 import events from 'events'
-import { FilterQuery, Model } from 'mongoose'
+import { FilterQuery, Model, MongoosasticModel } from 'mongoose'
 import { PluginDocument } from 'types'
 import { client } from './index'
 import { postSave } from './hooks'
@@ -65,7 +65,7 @@ export function createMapping(this: Model<PluginDocument>, body: any, cb: Callab
 	})
 }
 
-export function synchronize(this: Model<PluginDocument>, query: FilterQuery<PluginDocument>): events {
+export function synchronize(this: Model<PluginDocument>, query: FilterQuery<PluginDocument> = {}, inOpts: any = {}): events {
 
 	const options = (this as any).esOptions()
 
@@ -80,6 +80,8 @@ export function synchronize(this: Model<PluginDocument>, query: FilterQuery<Plug
 		size: (options.bulk && options.bulk.size) || 1000,
 		batch: (options.bulk && options.bulk.batch) || 50
 	}
+
+	const saveOnSynchronize = inOpts && inOpts.saveOnSynchronize !== undefined ? inOpts.saveOnSynchronize : options.saveOnSynchronize
 
 	const stream = this.find(query).batchSize(options.bulk.batch).cursor()
 
@@ -100,7 +102,17 @@ export function synchronize(this: Model<PluginDocument>, query: FilterQuery<Plug
 		doc.on('es-indexed', onIndex)
 		doc.on('es-filtered', onIndex)
 
-		postSave(doc)
+		if(saveOnSynchronize){
+			doc.save((err: any) => {
+				if (err) {
+					counter--
+					em.emit('error', err)
+					return stream.resume()
+				}
+			})
+		} else {
+			postSave(doc)
+		}
 	})
 
 	stream.on('close', () => {

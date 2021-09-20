@@ -10,7 +10,8 @@ import { createMapping, esCount, esTruncate, refresh, synchronize } from './stat
 let client: Client
 
 const defaultOptions = {
-	indexAutomatically: true
+	indexAutomatically: true,
+	saveOnSynchronize: true
 }
 
 function mongoosastic(schema: Schema<PluginDocument>, options: Options = {}): void {

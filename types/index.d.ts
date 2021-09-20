@@ -61,6 +61,7 @@ declare type Options = {
     indexAutomatically?: boolean,
     properties?: any,
     customSerialize?(model: PluginDocument | Model<PluginDocument>, mapping: any): any;
+    saveOnSynchronize?: boolean
 }
 
 declare type EsSearchOptions = {
