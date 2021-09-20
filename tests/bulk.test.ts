@@ -1,8 +1,7 @@
 'use strict'
 
-import mongoose from 'mongoose'
+import mongoose, { Schema } from 'mongoose'
 import { config } from './config'
-const Schema = mongoose.Schema
 import mongoosastic from '../lib/index'
 
 const BookSchema = new Schema({

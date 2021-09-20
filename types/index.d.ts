@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ClientOptions, ApiResponse } from '@elastic/elasticsearch'
-import { Aggregation, Highlight, Suggest, BulkResponse, CountResponse, RefreshResponse, SearchResponse } from '@elastic/elasticsearch/api/types'
+import { Aggregation, Highlight, Suggest, BulkResponse, CountResponse, RefreshResponse, SearchResponse, Context } from '@elastic/elasticsearch/api/types'
+import { callbackFn } from '@elastic/elasticsearch/lib/Helpers'
 import { EventEmitter } from 'events'
 import { Schema } from 'mongoose'
 import { Document, Model, PopulateOptions, QueryOptions } from 'mongoose'
@@ -91,6 +92,8 @@ declare module 'mongoose' {
         esOptions(): Options
         createMapping(body?: any, cb?: SearchCallbackFn<T>): void
         esTruncate(cb?: SearchCallbackFn<T>): void
+        esCount(cb?: callbackFn<Response, Context>): void
+        esCount(query?: any, cb?: callbackFn<Response, Context>): void
     }
 }
 
