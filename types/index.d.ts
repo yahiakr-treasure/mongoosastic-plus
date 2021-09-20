@@ -89,6 +89,7 @@ declare module 'mongoose' {
         synchronize(query?: any, options?: any): EventEmitter;
         esOptions(): Options
         createMapping(body: any, cb: SearchCallbackFn<T>): void
+        esTruncate(cb?: SearchCallbackFn<T>): void
     }
 }
 
