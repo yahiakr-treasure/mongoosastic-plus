@@ -10,8 +10,6 @@ import { filterMappingFromMixed, getIndexName, reformatESTotalNumber } from './u
 import { bulkDelete } from './bulking'
 import Generator from './mapping'
 
-let bulkOptions: any
-
 export function createMapping(this: Model<PluginDocument>, body: any, cb: CallableFunction): void {
 
 	const options = (this as any).esOptions()
@@ -149,7 +147,8 @@ export function esTruncate(this: Model<PluginDocument>, cb?: CallableFunction): 
 
 	// Set indexing to be bulk when synchronizing to make synchronizing faster
 	// Set default values when not present
-	bulkOptions = {
+	const bulkOptions = options.bulk
+	options.bulk = {
 		delay: (options.bulk && options.bulk.delay) || 1000,
 		size: (options.bulk && options.bulk.size) || 1000,
 		batch: (options.bulk && options.bulk.batch) || 50
@@ -177,7 +176,7 @@ export function esTruncate(this: Model<PluginDocument>, cb?: CallableFunction): 
 				bulkDelete(opts)
 			})
 		}
-		bulkOptions = undefined
+		options.bulk = bulkOptions
 		if(cb) return cb()
 	})
 }
@@ -205,8 +204,4 @@ export function esCount(this: Model<PluginDocument>, query: any, cb: callbackFn<
 	}
 
 	client.count(esQuery, cb)
-}
-
-export {
-	bulkOptions
 }
