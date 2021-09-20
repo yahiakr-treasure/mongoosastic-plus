@@ -36,7 +36,7 @@ export function createMapping(this: Model<PluginDocument>, body: any, cb: Callab
 			return cb(err)
 		}
 
-		if (exists) {
+		if (exists.body) {
 			return client.indices.putMapping({
 				index: indexName,
 				body: completeMapping
