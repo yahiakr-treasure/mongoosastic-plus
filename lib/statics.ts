@@ -17,7 +17,7 @@ export function createMapping(this: Model<PluginDocument>, body: any, cb: Callab
 		body = undefined
 	}
 
-	const options = (this as any).esOptions()
+	const options = this.esOptions()
 	
 	const indexName = getIndexName(this)
 	
@@ -70,7 +70,7 @@ export function createMapping(this: Model<PluginDocument>, body: any, cb: Callab
 
 export function synchronize(this: Model<PluginDocument>, query: FilterQuery<PluginDocument> = {}, inOpts: any = {}): events {
 
-	const options = (this as any).esOptions()
+	const options = this.esOptions()
 
 	const em = new events.EventEmitter()
 	let counter = 0
@@ -137,7 +137,7 @@ export function synchronize(this: Model<PluginDocument>, query: FilterQuery<Plug
 
 export function esTruncate(this: Model<PluginDocument>, cb?: CallableFunction): void {
 
-	const options = (this as any).esOptions()
+	const options = this.esOptions()
 
 	const indexName = getIndexName(this)
 

@@ -49,14 +49,14 @@ export function bulkIndex(instruction: any[], bulk: any): void {
 function flush(): void {
 	client.bulk({
 		body: bulkBuffer
-	}, (err: any, res: any) => {
+	}, (err, res) => {
 		if (err) {
 			console.log('Bulking error!')
 			// bulkErrEm.emit('error', err, res)
 		}
-		if (res.items && res.items.length) {
-			for (let i = 0; i < res.items.length; i++) {
-				const info = res.items[i]
+		if (res.body.items && res.body.items.length) {
+			for (let i = 0; i < res.body.items.length; i++) {
+				const info = res.body.items[i]
 				if (info && info.index && info.index.error) {
 					// bulkErrEm.emit('error', null, info.index)
 				}

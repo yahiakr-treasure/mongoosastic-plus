@@ -18,7 +18,7 @@ export function search(this: Model<PluginDocument>, query: any, opts: EsSearchOp
 
 export function esSearch(this: Model<PluginDocument>, query: any, opts: EsSearchOptions, cb: CallableFunction): void {
 
-	const options = (this as any).esOptions()
+	const options = this.esOptions()
 
 	const { highlight, suggest, aggs, min_score, routing } = opts
 

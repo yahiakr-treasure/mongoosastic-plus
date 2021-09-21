@@ -2,7 +2,7 @@
 
 import { Client } from '@elastic/elasticsearch'
 import { toInteger } from 'lodash'
-import { MongoosasticModel } from 'mongoose'
+import { Model } from 'mongoose'
 import { PluginDocument } from 'types'
 
 const esClient = new Client({ node: 'http://localhost:9200' })
@@ -17,13 +17,13 @@ async function deleteIndexIfExists(indexes: Array<string>): Promise<void> {
 	}
 }
 
-async function deleteDocs(models: Array<MongoosasticModel<PluginDocument>>): Promise<void> {
+async function deleteDocs(models: Array<Model<PluginDocument>>): Promise<void> {
 	for (const model of models) {
 		await model.deleteMany()
 	}
 }
 
-function createModelAndEnsureIndex(Model: MongoosasticModel<PluginDocument>, obj: any, cb: CallableFunction): void {
+function createModelAndEnsureIndex(Model: Model<PluginDocument>, obj: any, cb: CallableFunction): void {
 	const doc = new Model(obj)
 	doc.save(function (err) {
 		if (err) return cb(err)
@@ -36,7 +36,7 @@ function createModelAndEnsureIndex(Model: MongoosasticModel<PluginDocument>, obj
 	})
 }
 
-async function createModelAndSave (Model: MongoosasticModel<PluginDocument>, obj: any): Promise<PluginDocument> {
+async function createModelAndSave (Model: Model<PluginDocument>, obj: any): Promise<PluginDocument> {
 	const dude = new Model(obj)
 	return await dude.save()
 }

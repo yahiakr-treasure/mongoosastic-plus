@@ -13,7 +13,7 @@ export function isStringArray(arr: any): boolean {
 }
 
 export function getIndexName(doc: PluginDocument | Model<PluginDocument>): string {
-	const options = (doc as any).esOptions()
+	const options = doc.esOptions()
 	const indexName = options && options.index
 	if (!indexName) return doc.collection.name
 	else return indexName
@@ -115,7 +115,7 @@ export function reformatESTotalNumber(res: any): any {
 
 export function hydrate(res: ApiResponse, model: Model<PluginDocument>, opts: EsSearchOptions, cb: CallableFunction): void {
 
-	const options = (model as any).esOptions()
+	const options = model.esOptions()
 
 	const results = res.body.hits
 	const resultsMap: Record<string, any> = {}
