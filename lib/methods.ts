@@ -13,6 +13,13 @@ export function index(this: PluginDocument, inOpts: any = {}, cb?: CallableFunct
 
 	const options = this.esOptions()
 
+	const filter = options && options.filter
+
+	// unindex filtered models
+	if (filter && filter(this)) {
+		return this.unIndex(cb)
+	}
+
 	const indexName = inOpts.index ? inOpts.index : getIndexName(this)
 
 	const generator = new Generator()
