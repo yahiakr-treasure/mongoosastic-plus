@@ -38,7 +38,8 @@ export function index(this: PluginDocument, inOpts: any = {}, cb?: CallableFunct
 		index: indexName,
 		id: this._id.toString(),
 		body: body,
-		bulk: options.bulk
+		bulk: options.bulk,
+		routing: options.routing ? options.routing(this) : undefined
 	}
 
 	if (opt.bulk) {
@@ -61,7 +62,8 @@ export function unIndex(this: PluginDocument, cb?: CallableFunction): void {
 		tries: 3,
 		id: this._id.toString(),
 		bulk: options.bulk,
-		model: this
+		model: this,
+		routing: options.routing ? options.routing(this) : undefined
 	}
 
 	if (opt.bulk) {

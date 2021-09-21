@@ -71,7 +71,7 @@ declare type EsSearchOptions = {
     suggest?: any,
     aggs?: any,
     min_score?: any,
-    routing?: string,
+    routing?: any,
     sort?: any,
     hydrate?: boolean,
     hydrateOptions?: QueryOptions,

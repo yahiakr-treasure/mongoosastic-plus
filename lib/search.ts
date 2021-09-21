@@ -22,10 +22,11 @@ export function esSearch(this: Model<PluginDocument>, query: any, opts: EsSearch
 
 	const { highlight, suggest, aggs, min_score, routing } = opts
 
-	const body = { highlight, suggest, aggs, min_score, routing, ...query }
+	const body = { highlight, suggest, aggs, min_score, ...query }
 
 	const esQuery: Search = {
 		body: body,
+		routing: routing,
 		index: getIndexName(this), 
 	}
 
