@@ -116,6 +116,8 @@ declare module 'mongoose' {
 
         esCount(cb?: callbackFn<Response, Context>): void
         esCount(query?: any, cb?: callbackFn<Response, Context>): void
+
+        refresh(cb?: callbackFn<Response, Context>): void
     }
 }
 
