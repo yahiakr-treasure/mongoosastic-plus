@@ -170,6 +170,7 @@ export function esTruncate(this: Model<PluginDocument>, cb?: CallableFunction): 
 				const opts = {
 					index: indexName,
 					id: doc._id,
+					bulk: options.bulk,
 					routing: undefined
 				}
 				
