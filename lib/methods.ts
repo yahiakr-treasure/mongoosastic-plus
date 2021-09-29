@@ -39,6 +39,7 @@ export function index(this: PluginDocument, inOpts: any = {}, cb?: CallableFunct
 		id: this._id.toString(),
 		body: body,
 		bulk: options.bulk,
+		refresh: options.forceIndexRefresh,
 		routing: options.routing ? options.routing(this) : undefined
 	}
 

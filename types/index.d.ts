@@ -60,6 +60,7 @@ declare type Options = {
     hydrateOptions?: QueryOptions,
     transform?(doc: any, ...args: any): any,
     indexAutomatically?: boolean,
+    forceIndexRefresh?: boolean,
     properties?: any,
     customSerialize?(model: PluginDocument | Model<PluginDocument>, mapping: any): any;
     saveOnSynchronize?: boolean
