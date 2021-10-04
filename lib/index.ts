@@ -7,12 +7,19 @@ import { index, unIndex } from './methods'
 import { esSearch, search } from './search'
 import { createMapping, esCount, esTruncate, refresh, synchronize } from './statics'
 
-let globalOptions: Options
 let client: Client
+
+const defaultOptions = {
+	indexAutomatically: true,
+	saveOnSynchronize: true
+}
 
 function mongoosastic(schema: Schema<PluginDocument>, options: Options = {}): void {
 
-	globalOptions = options
+	options = { ...defaultOptions, ...options }
+
+	schema.method('esOptions', () => { return options })
+	schema.static('esOptions', () => { return options })
 
 	client = createEsClient(options)
 
@@ -29,16 +36,18 @@ function mongoosastic(schema: Schema<PluginDocument>, options: Options = {}): vo
 	schema.static('refresh', refresh)
 	schema.static('esCount', esCount)
 
-	schema.post('save', postSave)
-	schema.post('insertMany', (docs: PluginDocument[]) => docs.forEach((doc) => postSave(doc)))
+	if(options.indexAutomatically) {
+		schema.post('save', postSave)
+		schema.post('insertMany', (docs: PluginDocument[]) => docs.forEach((doc) => postSave(doc)))
 
-	schema.post('findOneAndUpdate', postSave)
+		schema.post('findOneAndUpdate', postSave)
 
-	schema.post(['findOneAndDelete', 'findOneAndRemove'], postRemove)
+		schema.post('remove', postRemove)
+		schema.post(['findOneAndDelete', 'findOneAndRemove'], postRemove)
+	}
 }
 
 export {
-	globalOptions as options,
 	client
 }
 

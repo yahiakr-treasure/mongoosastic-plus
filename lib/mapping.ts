@@ -1,7 +1,6 @@
 'use strict'
 
 import cloneDeep from 'lodash.clonedeep'
-import { Schema } from 'mongoose'
 
 //
 // Get type from the mongoose schema

@@ -1,5 +1,4 @@
 import { client } from './index'
-import { options } from './index'
 
 let bulkBuffer: any[] = []
 let bulkTimeout: any
@@ -17,7 +16,7 @@ export function bulkAdd(opts: any): void {
 		}
 	}, opts.body]
 	
-	bulkIndex(instruction)
+	bulkIndex(instruction, opts.bulk)
 }
 
 export function bulkDelete(opts: any, cb?: CallableFunction): void {
@@ -28,33 +27,36 @@ export function bulkDelete(opts: any, cb?: CallableFunction): void {
 		}
 	}]
 	
-	bulkIndex(instruction)
+	bulkIndex(instruction, opts.bulk)
 	if(cb) cb()
 }
 
-export function bulkIndex(instruction: any[]): void {
+export function bulkIndex(instruction: any[], bulk: any): void {
 
 	bulkBuffer = bulkBuffer.concat(instruction)
 
-	if (bulkBuffer.length >= options.bulk!.size) {
+	if (bulkBuffer.length >= bulk.size) {
 		flush()
 		clearBulkTimeout()
 	} else if (bulkTimeout === undefined) {
 		bulkTimeout = setTimeout(() => {
 			flush()
 			clearBulkTimeout()
-		}, options.bulk!.delay)
+		}, bulk.delay)
 	}
 }
 
 function flush(): void {
 	client.bulk({
 		body: bulkBuffer
-	}, (err: any, res: any) => {
-		// if (err) bulkErrEm.emit('error', err, res)
-		if (res.items && res.items.length) {
-			for (let i = 0; i < res.items.length; i++) {
-				const info = res.items[i]
+	}, (err, res) => {
+		if (err) {
+			console.log('Bulking error!')
+			// bulkErrEm.emit('error', err, res)
+		}
+		if (res.body.items && res.body.items.length) {
+			for (let i = 0; i < res.body.items.length; i++) {
+				const info = res.body.items[i]
 				if (info && info.index && info.index.error) {
 					// bulkErrEm.emit('error', null, info.index)
 				}

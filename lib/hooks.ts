@@ -1,7 +1,12 @@
 import { PluginDocument } from 'types'
-import { options } from './index'
 
 export function postSave(doc: PluginDocument): void {
+
+	if (!doc) {
+		return
+	}
+
+	const options = doc.esOptions()
 
 	const filter = options && options.filter
 
@@ -29,5 +34,10 @@ export function postSave(doc: PluginDocument): void {
 }
 
 export function postRemove(doc: PluginDocument): void {
+	
+	if (!doc) {
+		return
+	}
+	
 	doc.unIndex()
 }

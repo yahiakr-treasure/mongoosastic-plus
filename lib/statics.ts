@@ -6,14 +6,20 @@ import { FilterQuery, Model } from 'mongoose'
 import { PluginDocument } from 'types'
 import { client } from './index'
 import { postSave } from './hooks'
-import { options } from './index'
-import { filterMappingFromMixed, reformatESTotalNumber } from './utils'
+import { filterMappingFromMixed, getIndexName, reformatESTotalNumber } from './utils'
 import { bulkDelete } from './bulking'
 import Generator from './mapping'
 
 export function createMapping(this: Model<PluginDocument>, body: any, cb: CallableFunction): void {
+
+	if (arguments.length < 2) {
+		cb = body
+		body = undefined
+	}
+
+	const options = this.esOptions()
 	
-	const indexName = options.index || this.collection.name
+	const indexName = getIndexName(this)
 	
 	const generator = new Generator()
 	const completeMapping = generator.generateMapping(this.schema)
@@ -35,7 +41,7 @@ export function createMapping(this: Model<PluginDocument>, body: any, cb: Callab
 			return cb(err)
 		}
 
-		if (exists) {
+		if (exists.body) {
 			return client.indices.putMapping({
 				index: indexName,
 				body: completeMapping
@@ -62,19 +68,23 @@ export function createMapping(this: Model<PluginDocument>, body: any, cb: Callab
 	})
 }
 
-export function synchronize(this: Model<PluginDocument>, query: FilterQuery<PluginDocument>): events {
+export function synchronize(this: Model<PluginDocument>, query: FilterQuery<PluginDocument> = {}, inOpts: any = {}): events {
+
+	const options = this.esOptions()
+
 	const em = new events.EventEmitter()
 	let counter = 0
 
 	// Set indexing to be bulk when synchronizing to make synchronizing faster
 	// Set default values when not present
-	const bulk = options.bulk
-	
+	const bulkOptions = options.bulk
 	options.bulk = {
 		delay: (options.bulk && options.bulk.delay) || 1000,
 		size: (options.bulk && options.bulk.size) || 1000,
 		batch: (options.bulk && options.bulk.batch) || 50
 	}
+
+	const saveOnSynchronize = inOpts && inOpts.saveOnSynchronize !== undefined ? inOpts.saveOnSynchronize : options.saveOnSynchronize
 
 	const stream = this.find(query).batchSize(options.bulk.batch).cursor()
 
@@ -95,7 +105,17 @@ export function synchronize(this: Model<PluginDocument>, query: FilterQuery<Plug
 		doc.on('es-indexed', onIndex)
 		doc.on('es-filtered', onIndex)
 
-		postSave(doc)
+		if(saveOnSynchronize){
+			doc.save((err: any) => {
+				if (err) {
+					counter--
+					em.emit('error', err)
+					return stream.resume()
+				}
+			})
+		} else {
+			postSave(doc)
+		}
 	})
 
 	stream.on('close', () => {
@@ -103,7 +123,7 @@ export function synchronize(this: Model<PluginDocument>, query: FilterQuery<Plug
 			if (counter === 0) {
 				clearInterval(closeInterval)
 				em.emit('close')
-				options.bulk = bulk
+				options.bulk = bulkOptions
 			}
 		}, 1000)
 	})
@@ -117,7 +137,9 @@ export function synchronize(this: Model<PluginDocument>, query: FilterQuery<Plug
 
 export function esTruncate(this: Model<PluginDocument>, cb?: CallableFunction): void {
 
-	const indexName = options.index || this.collection.name
+	const options = this.esOptions()
+
+	const indexName = getIndexName(this)
 
 	const esQuery = {
 		index: indexName,
@@ -130,8 +152,7 @@ export function esTruncate(this: Model<PluginDocument>, cb?: CallableFunction): 
 
 	// Set indexing to be bulk when synchronizing to make synchronizing faster
 	// Set default values when not present
-	const bulk = options.bulk
-	
+	const bulkOptions = options.bulk
 	options.bulk = {
 		delay: (options.bulk && options.bulk.delay) || 1000,
 		size: (options.bulk && options.bulk.size) || 1000,
@@ -149,6 +170,7 @@ export function esTruncate(this: Model<PluginDocument>, cb?: CallableFunction): 
 				const opts = {
 					index: indexName,
 					id: doc._id,
+					bulk: options.bulk,
 					routing: undefined
 				}
 				
@@ -160,14 +182,14 @@ export function esTruncate(this: Model<PluginDocument>, cb?: CallableFunction): 
 				bulkDelete(opts)
 			})
 		}
-		options.bulk = bulk
+		options.bulk = bulkOptions
 		if(cb) return cb()
 	})
 }
 
 export function refresh(this: Model<PluginDocument>, cb: callbackFn<Response, Context>): void {
 	client.indices.refresh({
-		index: options.index || this.collection.name
+		index: getIndexName(this)
 	}, cb)
 }
 
@@ -184,7 +206,7 @@ export function esCount(this: Model<PluginDocument>, query: any, cb: callbackFn<
 		body: {
 			query: query
 		},
-		index: options.index || this.collection.name
+		index: getIndexName(this)
 	}
 
 	client.count(esQuery, cb)

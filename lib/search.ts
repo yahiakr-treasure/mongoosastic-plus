@@ -1,9 +1,8 @@
 import { Search } from '@elastic/elasticsearch/api/requestParams'
-import { options } from './index'
 import { Model } from 'mongoose'
 import { EsSearchOptions, PluginDocument } from 'types'
 import { client } from './index'
-import { hydrate, isString, isStringArray, reformatESTotalNumber } from './utils'
+import { getIndexName, hydrate, isString, isStringArray, reformatESTotalNumber } from './utils'
 
 
 export function search(this: Model<PluginDocument>, query: any, opts: EsSearchOptions, cb: CallableFunction): void {
@@ -19,13 +18,16 @@ export function search(this: Model<PluginDocument>, query: any, opts: EsSearchOp
 
 export function esSearch(this: Model<PluginDocument>, query: any, opts: EsSearchOptions, cb: CallableFunction): void {
 
+	const options = this.esOptions()
+
 	const { highlight, suggest, aggs, min_score, routing } = opts
 
-	const body = { highlight, suggest, aggs, min_score, routing, ...query }
+	const body = { highlight, suggest, aggs, min_score, ...query }
 
 	const esQuery: Search = {
 		body: body,
-		index: options.index || this.collection.name, 
+		routing: routing,
+		index: getIndexName(this), 
 	}
 
 	if (opts.sort) {
