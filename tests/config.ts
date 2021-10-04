@@ -25,9 +25,7 @@ async function deleteDocs(models: Array<Model<PluginDocument>>): Promise<void> {
 
 function createModelAndEnsureIndex(Model: Model<PluginDocument>, obj: any, cb: CallableFunction): void {
 	const doc = new Model(obj)
-	doc.save(function (err) {
-		if (err) return cb(err)
-		
+	doc.save(function () {
 		doc.on('es-indexed', function () {
 			setTimeout(function () {
 				cb(null, doc)
@@ -42,12 +40,9 @@ async function createModelAndSave (Model: Model<PluginDocument>, obj: any): Prom
 }
 
 function saveAndWaitIndex (doc: PluginDocument, cb: CallableFunction): void {
-	doc.save(function (err) {
-		if (err) cb(err)
-		else {
-			doc.once('es-indexed', cb)
-			doc.once('es-filtered', cb)
-		}
+	doc.save(function () {
+		doc.once('es-indexed', cb)
+		doc.once('es-filtered', cb)
 	})
 }
 
@@ -71,19 +66,16 @@ export const config = {
 		useFindAndModify: false,
 		useUnifiedTopology: true
 	},
-	INDEXING_TIMEOUT: INDEXING_TIMEOUT,
-	BULK_ACTION_TIMEOUT: BULK_ACTION_TIMEOUT,
-	deleteIndexIfExists: deleteIndexIfExists,
-	deleteDocs: deleteDocs,
-	createModelAndEnsureIndex: createModelAndEnsureIndex,
-	createModelAndSave: createModelAndSave,
-	saveAndWaitIndex: saveAndWaitIndex,
-	bookTitlesArray: bookTitlesArray,
-	getClient: function () {
+	INDEXING_TIMEOUT,
+	BULK_ACTION_TIMEOUT,
+	deleteIndexIfExists,
+	deleteDocs,
+	createModelAndEnsureIndex,
+	createModelAndSave,
+	saveAndWaitIndex,
+	bookTitlesArray,
+	getClient: function(): Client {
 		return esClient
 	},
-	close: function () {
-		esClient.close()
-	}
 }
 
