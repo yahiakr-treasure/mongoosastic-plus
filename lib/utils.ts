@@ -62,10 +62,6 @@ export function serialize(model: PluginDocument | Model<PluginDocument>, mapping
 		return _serializeObject(model, mapping)
 	}
 
-	if (mapping.cast && typeof mapping.cast !== 'function') {
-		throw new Error('es_cast must be a function')
-	}
-
 	const outModel = mapping.cast ? mapping.cast(model) : model
 	if (typeof outModel === 'object' && outModel !== null) {
 		name = outModel.constructor.name
@@ -135,9 +131,6 @@ export function hydrate(res: ApiResponse, model: Model<PluginDocument>, opts: Es
 	// Build Mongoose query based on hydrate options
 	// Example: {lean: true, sort: '-name', select: 'address name'}
 	query.setOptions(hydrateOptions!)
-	// Object.keys(hydrateOptions).forEach(option => {
-	// 	query[option](hydrateOptions[option])
-	// })
 
 	query.exec((err, docs) => {
 		let hits

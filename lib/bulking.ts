@@ -51,7 +51,6 @@ function flush(): void {
 		body: bulkBuffer
 	}, (err, res) => {
 		if (err) {
-			console.log('Bulking error!')
 			// bulkErrEm.emit('error', err, res)
 		}
 		if (res.body.items && res.body.items.length) {
