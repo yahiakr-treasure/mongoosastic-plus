@@ -107,7 +107,7 @@ describe('Geo Bounding Box Test', function () {
 				setTimeout(function () {
 					GeoBoundingBoxModel.search({
 						match_all: {}
-					}, {}, function (err, res) {
+					}, function (err, res) {
 						expect(res?.body.hits.total).toEqual(3)
 						done()
 					})
@@ -141,7 +141,7 @@ describe('Geo Bounding Box Test', function () {
 		}
 
 		setTimeout(function () {
-			GeoBoundingBoxModel.search(geoQuery, {}, function (err, res) {
+			GeoBoundingBoxModel.search(geoQuery, function (err, res) {
 				expect(res?.body.hits.total).toEqual(2)
 				done()
 			})

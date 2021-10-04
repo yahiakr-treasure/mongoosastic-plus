@@ -7,6 +7,11 @@ import { getIndexName, hydrate, isString, isStringArray, reformatESTotalNumber }
 
 export function search(this: Model<PluginDocument>, query: any, opts: EsSearchOptions, cb: CallableFunction): void {
 
+	if (cb === undefined) {
+		cb = opts as CallableFunction
+		opts = {}
+	}
+
 	const fullQuery = {
 		query: query
 	}
@@ -17,6 +22,11 @@ export function search(this: Model<PluginDocument>, query: any, opts: EsSearchOp
 }
 
 export function esSearch(this: Model<PluginDocument>, query: any, opts: EsSearchOptions, cb: CallableFunction): void {
+
+	if (cb === undefined) {
+		cb = opts as CallableFunction
+		opts = {}
+	}
 
 	const options = this.esOptions()
 

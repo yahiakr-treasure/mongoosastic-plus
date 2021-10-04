@@ -195,7 +195,7 @@ export function refresh(this: Model<PluginDocument>, cb: callbackFn<Response, Co
 
 export function esCount(this: Model<PluginDocument>, query: any, cb: callbackFn<Response, Context>): void {
 
-	if (!cb && typeof query === 'function') {
+	if (cb === undefined) {
 		cb = query
 		query = {
 			match_all: {}
