@@ -48,10 +48,10 @@ describe('Highlight search', function () {
 		await Text.deleteMany()
 
 		for (const text of texts) {
-			config.saveAndWaitIndex(text, function() {
-				setTimeout(done, config.INDEXING_TIMEOUT)
-			})
+			await text.save()
 		}
+
+		setTimeout(done, config.INDEXING_TIMEOUT)
 	})
 
 	afterAll(async function () {
@@ -62,58 +62,62 @@ describe('Highlight search', function () {
 
 	describe('Highlight without hydrating', function () {
 		it('should return highlighted text on every hit result', function (done) {
-			Text.search({
-				match_phrase: {
-					quote: 'Death'
-				}
-			}, {
-				highlight: {
-					fields: {
-						quote: {}
+			setTimeout(() => {
+				Text.search({
+					match_phrase: {
+						quote: 'Death'
 					}
-				}
-			}, function (err, res) {
-				expect(res?.body.hits.total).toEqual(3)
-
-				res?.body.hits.hits.forEach(function (text) {
-					expect(text).toHaveProperty('highlight')
-					expect(text.highlight).toHaveProperty('quote')
-
-					text.highlight?.quote.forEach(function (query) {
-						expect(responses).toContainEqual(query)
+				}, {
+					highlight: {
+						fields: {
+							quote: {}
+						}
+					}
+				}, function (err, res) {
+					expect(res?.body.hits.total).toEqual(3)
+	
+					res?.body.hits.hits.forEach(function (text) {
+						expect(text).toHaveProperty('highlight')
+						expect(text.highlight).toHaveProperty('quote')
+	
+						text.highlight?.quote.forEach(function (query) {
+							expect(responses).toContainEqual(query)
+						})
 					})
+					done()
 				})
-				done()
-			})
+			}, config.INDEXING_TIMEOUT)
 		})
 	})
 
 	describe('Highlight hydrated results', function () {
 		it('should return highlighted text on every resulting document', function (done) {
-			Text.search({
-				match_phrase: {
-					quote: 'Death'
-				}
-			}, {
-				hydrate: true,
-				highlight: {
-					fields: {
-						quote: {}
+			setTimeout(() => {
+				Text.search({
+					match_phrase: {
+						quote: 'Death'
 					}
-				}
-			}, function (err, res) {
-				expect(res?.body.hits.total).toEqual(3)
-
-				res?.body.hits.hits.forEach(function (text: any) {
-					expect(text).toHaveProperty('_highlight')
-					expect(text._highlight).toHaveProperty('quote')
-
-					text._highlight?.quote.forEach(function (query: any) {
-						expect(responses).toContainEqual(query)
+				}, {
+					hydrate: true,
+					highlight: {
+						fields: {
+							quote: {}
+						}
+					}
+				}, function (err, res) {
+					expect(res?.body.hits.total).toEqual(3)
+	
+					res?.body.hits.hits.forEach(function (text: any) {
+						expect(text).toHaveProperty('_highlight')
+						expect(text._highlight).toHaveProperty('quote')
+	
+						text._highlight?.quote.forEach(function (query: any) {
+							expect(responses).toContainEqual(query)
+						})
 					})
+					done()
 				})
-				done()
-			})
+			}, config.INDEXING_TIMEOUT)
 		})
 	})
 })

@@ -46,16 +46,9 @@ describe('Suggesters', function () {
 	beforeAll(async function (done) {
 		await mongoose.connect(config.mongoUrl, config.mongoOpts)
 		await config.deleteIndexIfExists(['kittens'])
+		await Kitten.deleteMany()
 
-		Kitten.createMapping({}, function () {
-			Kitten.deleteMany(function () {
-				for (const kitten of kittens) {
-					config.saveAndWaitIndex(kitten, function() {
-						setTimeout(done, config.INDEXING_TIMEOUT)
-					})
-				}
-			})
-		})
+		Kitten.createMapping(done)
 	})
 
 	afterAll(async function () {
@@ -67,35 +60,40 @@ describe('Suggesters', function () {
 	describe('Testing Suggest', function () {
 
 		it('should index property name with type completion', function (done) {
-			Kitten.createMapping(undefined, function () {
-				esClient.indices.getMapping({
-					index: 'kittens'
-				}, function (err, mapping) {
-					const props = mapping.body.kittens.mappings.properties
-					expect(props.name.type).toEqual('completion')
-					done()
-				})
+			esClient.indices.getMapping({
+				index: 'kittens'
+			}, function (err, mapping) {
+				const props = mapping.body.kittens.mappings.properties
+				expect(props.name.type).toEqual('completion')
+				done()
 			})
 		})
 
-		it('should return suggestions after hits', function (done) {
-			Kitten.search({
-				match_all: {}
-			}, {
-				suggest: {
-					kittensuggest: {
-						text: 'Cook',
-						completion: {
-							field: 'name'
+		it('should return suggestions after hits',async function (done) {
+
+			for (const kitten of kittens) {
+				await kitten.save()
+			}
+
+			setTimeout(() => {
+				Kitten.search({
+					match_all: {}
+				}, {
+					suggest: {
+						kittensuggest: {
+							text: 'Cook',
+							completion: {
+								field: 'name'
+							}
 						}
 					}
-				}
-			}, function (err, res) {
-				const body = res?.body
-				expect(body).toHaveProperty('suggest')
-				expect(body?.suggest?.kittensuggest[0].options.length).toEqual(2)
-				done()
-			})
+				}, function (err, res) {
+					const body = res?.body
+					expect(body).toHaveProperty('suggest')
+					expect(body?.suggest?.kittensuggest[0].options.length).toEqual(2)
+					done()
+				})
+			}, config.BULK_ACTION_TIMEOUT)
 		})
 	})
 })

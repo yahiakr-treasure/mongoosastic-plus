@@ -19,7 +19,7 @@ export function bulkAdd(opts: any): void {
 	bulkIndex(instruction, opts.bulk)
 }
 
-export function bulkDelete(opts: any, cb?: CallableFunction): void {
+export function bulkDelete(opts: any): void {
 	const instruction = [{
 		delete: {
 			_index: opts.index,
@@ -28,7 +28,6 @@ export function bulkDelete(opts: any, cb?: CallableFunction): void {
 	}]
 	
 	bulkIndex(instruction, opts.bulk)
-	if(cb) cb()
 }
 
 export function bulkIndex(instruction: any[], bulk: any): void {

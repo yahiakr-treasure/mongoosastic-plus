@@ -46,10 +46,10 @@ describe('Count', function () {
 		await config.deleteIndexIfExists(['comments'])
 
 		for (const comment of comments) {
-			config.saveAndWaitIndex(comment, function() {
-				setTimeout(done, config.INDEXING_TIMEOUT)
-			})
+			await comment.save()
 		}
+
+		setTimeout(done, config.INDEXING_TIMEOUT)
 	})
 
 	afterAll(async function() {
@@ -59,22 +59,26 @@ describe('Count', function () {
 	})
 
 	it('should count a type', function (done) {
-		Comment.esCount({
-			term: {
-				user: 'terry'
-			}
-		}, function (err, results) {
-			const body: any = results.body
-			expect(body.count).toEqual(1)
-			done(err)
-		})
+		setTimeout(() => {
+			Comment.esCount({
+				term: {
+					user: 'terry'
+				}
+			}, function (err, results) {
+				const body: any = results.body
+				expect(body.count).toEqual(1)
+				done(err)
+			})
+		}, config.INDEXING_TIMEOUT)
 	})
 
 	it('should count a type without query', function (done) {
-		Comment.esCount(function (err, results) {
-			const body: any = results.body
-			expect(body.count).toEqual(2)
-			done(err)
-		})
+		setTimeout(() => {
+			Comment.esCount(function (err, results) {
+				const body: any = results.body
+				expect(body.count).toEqual(2)
+				done(err)
+			})
+		}, config.INDEXING_TIMEOUT)
 	})
 })

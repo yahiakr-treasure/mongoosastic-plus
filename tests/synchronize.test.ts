@@ -26,6 +26,10 @@ describe('Synchronize', () => {
 	
 	let books: any
 
+	beforeAll(function() {
+		jest.setTimeout(10000)
+	})
+
 	afterAll(async function() {
 		await Book.deleteMany()
 		await config.deleteIndexIfExists(['books'])
@@ -73,11 +77,11 @@ describe('Synchronize', () => {
 						query_string: {
 							query: 'American'
 						}
-					}, {}, (err, results) => {
+					}, (err, results) => {
 						expect(results?.body.hits.total).toEqual(2)
 						done()
 					})
-				}, config.INDEXING_TIMEOUT)
+				}, config.BULK_ACTION_TIMEOUT)
 			})
 		})
 	})
@@ -121,7 +125,7 @@ describe('Synchronize', () => {
 						expect(results?.body.hits.total).toEqual(2)
 						done()
 					})
-				}, config.INDEXING_TIMEOUT)
+				}, config.BULK_ACTION_TIMEOUT)
 			})
 		})
 
@@ -147,7 +151,7 @@ describe('Synchronize', () => {
 						expect(results?.body.hits.total).toEqual(2)
 						done()
 					})
-				}, config.INDEXING_TIMEOUT)
+				}, config.BULK_ACTION_TIMEOUT)
 			})
 		})
 	})

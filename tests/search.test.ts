@@ -199,14 +199,16 @@ describe('Query DSL', function () {
 				return res._source.name
 			}
 
-			Bond.search({
-				match: {
-					name: {
-						query: 'comersial',
-						fuzziness: 2
+			Bond.esSearch({
+				query: {
+					match: {
+						name: {
+							query: 'comersial',
+							fuzziness: 2
+						}
 					}
 				}
-			}, {}, function (err, res) {
+			}, function (err, res) {
 				expect(res?.body.hits.total).toEqual(1)
 				expect(['Commercial']).toEqual(res?.body.hits.hits.map(getNames))
 				done()

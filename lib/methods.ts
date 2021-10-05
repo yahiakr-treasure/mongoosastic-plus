@@ -25,7 +25,7 @@ export function index(this: PluginDocument, inOpts: any = {}, cb?: CallableFunct
 	const generator = new Generator()
 	const mapping = generator.generateMapping(this.schema)
 
-	let body: any
+	let body
 	if (options.customSerialize) {
 		body = options.customSerialize(this, mapping)
 	} else {
@@ -68,7 +68,7 @@ export function unIndex(this: PluginDocument, cb?: CallableFunction): void {
 	}
 
 	if (opt.bulk) {
-		bulkDelete(opt, cb)
+		bulkDelete(opt)
 	} else {
 		deleteById(opt, cb)
 	}
