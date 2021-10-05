@@ -85,7 +85,7 @@ describe('Filter mode', function () {
 				term: {
 					title: 'rec'
 				}
-			}, {}, function (err, results) {
+			}, function (err, results) {
 				expect(results?.body.hits.total).toEqual(1)
 
 				movie.genre = 'action'
