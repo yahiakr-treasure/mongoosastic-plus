@@ -1,3 +1,4 @@
+import { BulkIndexOptions, BulkOptions, BulkUnIndexOptions } from 'types'
 import { client } from './index'
 
 let bulkBuffer: any[] = []
@@ -8,7 +9,7 @@ function clearBulkTimeout() {
 	bulkTimeout = undefined
 }
 
-export function bulkAdd(opts: any): void {
+export function bulkAdd(opts: BulkIndexOptions): void {
 	const instruction = [{
 		index: {
 			_index: opts.index,
@@ -16,10 +17,10 @@ export function bulkAdd(opts: any): void {
 		}
 	}, opts.body]
 	
-	bulkIndex(instruction, opts.bulk)
+	bulkIndex(instruction, opts.bulk as BulkOptions)
 }
 
-export function bulkDelete(opts: any): void {
+export function bulkDelete(opts: BulkUnIndexOptions): void {
 	const instruction = [{
 		delete: {
 			_index: opts.index,
@@ -27,10 +28,10 @@ export function bulkDelete(opts: any): void {
 		}
 	}]
 	
-	bulkIndex(instruction, opts.bulk)
+	bulkIndex(instruction, opts.bulk as BulkOptions)
 }
 
-export function bulkIndex(instruction: any[], bulk: any): void {
+export function bulkIndex(instruction: any[], bulk: BulkOptions): void {
 
 	bulkBuffer = bulkBuffer.concat(instruction)
 

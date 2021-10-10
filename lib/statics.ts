@@ -1,20 +1,21 @@
-import { ApiError, ApiResponse } from '@elastic/elasticsearch'
-import { Context } from '@elastic/elasticsearch/api/types'
+import { Context, QueryContainer } from '@elastic/elasticsearch/api/types'
 import { callbackFn } from '@elastic/elasticsearch/lib/Helpers'
 import events from 'events'
 import { FilterQuery, Model } from 'mongoose'
-import { PluginDocument } from 'types'
+import { PluginDocument, SynchronizeOptions } from 'types'
 import { client } from './index'
 import { postSave } from './hooks'
 import { filterMappingFromMixed, getIndexName, reformatESTotalNumber } from './utils'
 import { bulkDelete } from './bulking'
 import Generator from './mapping'
+import { RequestBody } from '@elastic/elasticsearch/lib/Transport'
+import { Search } from '@elastic/elasticsearch/api/requestParams'
 
-export function createMapping(this: Model<PluginDocument>, body: any, cb: CallableFunction): void {
+export function createMapping(this: Model<PluginDocument>, body: RequestBody, cb: CallableFunction): void {
 
 	if (arguments.length < 2) {
-		cb = body
-		body = undefined
+		cb = body as CallableFunction
+		body = {}
 	}
 
 	const options = this.esOptions()
@@ -68,7 +69,7 @@ export function createMapping(this: Model<PluginDocument>, body: any, cb: Callab
 	})
 }
 
-export function synchronize(this: Model<PluginDocument>, query: FilterQuery<PluginDocument> = {}, inOpts: any = {}): events {
+export function synchronize(this: Model<PluginDocument>, query: FilterQuery<PluginDocument> = {}, inOpts: SynchronizeOptions = {}): events {
 
 	const options = this.esOptions()
 
@@ -84,7 +85,7 @@ export function synchronize(this: Model<PluginDocument>, query: FilterQuery<Plug
 		batch: (options.bulk && options.bulk.batch) || 50
 	}
 
-	const saveOnSynchronize = inOpts && inOpts.saveOnSynchronize !== undefined ? inOpts.saveOnSynchronize : options.saveOnSynchronize
+	const saveOnSynchronize = inOpts.saveOnSynchronize !== undefined ? inOpts.saveOnSynchronize : options.saveOnSynchronize
 
 	const stream = this.find(query).batchSize(options.bulk.batch).cursor()
 
@@ -92,7 +93,7 @@ export function synchronize(this: Model<PluginDocument>, query: FilterQuery<Plug
 		stream.pause()
 		counter++
 
-		function onIndex (indexErr: any, inDoc: PluginDocument) {
+		function onIndex (indexErr: unknown, inDoc: PluginDocument) {
 			counter--
 			if (indexErr) {
 				em.emit('error', indexErr)
@@ -106,7 +107,7 @@ export function synchronize(this: Model<PluginDocument>, query: FilterQuery<Plug
 		doc.on('es-filtered', onIndex)
 
 		if(saveOnSynchronize){
-			doc.save((err: any) => {
+			doc.save((err: unknown) => {
 				if (err) {
 					counter--
 					em.emit('error', err)
@@ -141,7 +142,7 @@ export function esTruncate(this: Model<PluginDocument>, cb?: CallableFunction): 
 
 	const indexName = getIndexName(this)
 
-	const esQuery = {
+	const esQuery: Search = {
 		index: indexName,
 		body: {
 			query: {
@@ -159,12 +160,13 @@ export function esTruncate(this: Model<PluginDocument>, cb?: CallableFunction): 
 		batch: (options.bulk && options.bulk.batch) || 50
 	}
 
-	client.search(esQuery, (err: ApiError, res: ApiResponse) => {
+	client.search(esQuery, (err, res) => {
 		if (err) {
 			if(cb) return cb(err)
 		}
 		res = reformatESTotalNumber(res)
 		if (res.body.hits.total) {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			res.body.hits.hits.forEach((doc: any) => {
 				
 				const opts = {
@@ -193,10 +195,10 @@ export function refresh(this: Model<PluginDocument>, cb: callbackFn<Response, Co
 	}, cb)
 }
 
-export function esCount(this: Model<PluginDocument>, query: any, cb: callbackFn<Response, Context>): void {
+export function esCount(this: Model<PluginDocument>, query: QueryContainer, cb: callbackFn<Response, Context>): void {
 
 	if (cb === undefined) {
-		cb = query
+		cb = query as callbackFn<Response, Context>
 		query = {
 			match_all: {}
 		}

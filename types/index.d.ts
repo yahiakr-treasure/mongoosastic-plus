@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ClientOptions, ApiResponse } from '@elastic/elasticsearch'
-import { Aggregation, Highlight, Suggest, BulkResponse, CountResponse, RefreshResponse, SearchResponse, Context } from '@elastic/elasticsearch/api/types'
-import { callbackFn } from '@elastic/elasticsearch/lib/Helpers'
+import { Highlight, BulkResponse, CountResponse, RefreshResponse, SearchResponse, QueryContainer, SearchRequest } from '@elastic/elasticsearch/api/types'
+import { RequestBody } from '@elastic/elasticsearch/lib/Transport'
 import { EventEmitter } from 'events'
 import { Schema } from 'mongoose'
 import { Document, Model, PopulateOptions, QueryOptions } from 'mongoose'
@@ -11,7 +11,10 @@ declare interface FilterFn {
     (doc: Document): boolean;
 }
 declare interface TransformFn {
-    (doc: Document): boolean;
+    (doc: Document, ...args: any): any;
+}
+declare interface RoutingFn {
+    (doc: Document): any;
 }
 declare interface CreateMappingCallbackFn {
     (err: any | null | undefined, inputMapping: any | null | undefined): void;
@@ -36,6 +39,38 @@ declare interface RefreshCallbackFn {
     (err: any, resp: null | undefined): void;
 }
 
+declare interface BulkOptions {
+    delay: number,
+    size: number,
+    batch: number,
+}
+
+declare interface IndexMethodOptions {
+    index?: string,
+}
+
+declare interface SynchronizeOptions {
+    saveOnSynchronize?: boolean
+}
+
+declare interface BulkIndexOptions {
+    index: string,
+    id: string,
+    body: any,
+    bulk?: BulkOptions,
+    refresh?: boolean,
+    routing?: RoutingFn
+}
+
+declare interface BulkUnIndexOptions {
+    index: string,
+    id: string,
+    bulk?: BulkOptions,
+    document?: Document,
+    tries?: number,
+    routing?: RoutingFn
+}
+
 declare class PluginDocument extends Document {
 	index(cb?: CallableFunction): void
 	unIndex(cb?: CallableFunction): void
@@ -49,16 +84,12 @@ declare type Options = {
     clientOptions?: ClientOptions,
     index?: string,
     populate?: PopulateOptions[],
-    bulk?: {
-        delay: number,
-        size: number,
-        batch: number,
-    },
-    filter?(doc: Document): boolean,
-    routing?(doc: Document): any,
+    bulk?: BulkOptions,
+    filter?: FilterFn,
+    routing?: RoutingFn,
     alwaysHydrate?: boolean,
     hydrateOptions?: QueryOptions,
-    transform?(doc: any, ...args: any): any,
+    transform?: TransformFn,
     indexAutomatically?: boolean,
     forceIndexRefresh?: boolean,
     properties?: any,
@@ -83,47 +114,36 @@ declare module 'mongoosastic' {
     const Mongoosastic: (schema: Schema, Options?: Partial<Options>) => void
     export = Mongoosastic;
 }
-  
+
 declare module 'mongoose' {
-    // export function model<T extends PluginDocument>(name: string, schema?: Schema<T>, collection?: string, skipInit?: boolean): MongoosasticModel<T>;
-    
-    // export interface MongoosasticModel<T extends Document> extends Model<T> {
-    //     search(query: any, cb?: SearchCallbackFn<T>): void;
-    //     search(query: any, options?: EsSearchOptions, cb?: SearchCallbackFn<T>): void;
-
-    //     esSearch(query: any, cb?: SearchCallbackFn<T>): void;
-    //     esSearch(query: any, options?: EsSearchOptions, cb?: SearchCallbackFn<T>): void;
-
-    //     synchronize(query?: any, options?: any): EventEmitter;
-    //     esOptions(): Options
-    //     createMapping(body?: any, cb?: SearchCallbackFn<T>): void
-    //     esTruncate(cb?: SearchCallbackFn<T>): void
-
-    //     esCount(cb?: callbackFn<Response, Context>): void
-    //     esCount(query?: any, cb?: callbackFn<Response, Context>): void
-    // }
 
     export interface Model<T extends Document> {
-        search(query: any, cb?: SearchCallbackFn<T>): void;
-        search(query: any, options?: EsSearchOptions, cb?: SearchCallbackFn<T>): void;
+        search(query: QueryContainer, cb?: SearchCallbackFn<T>): void;
+        search(query: QueryContainer, options?: EsSearchOptions, cb?: SearchCallbackFn<T>): void;
 
-        esSearch(query: any, cb?: SearchCallbackFn<T>): void;
-        esSearch(query: any, options?: EsSearchOptions, cb?: SearchCallbackFn<T>): void;
+        esSearch(query: SearchRequest['body'], cb?: SearchCallbackFn<T>): void;
+        esSearch(query: SearchRequest['body'], options?: EsSearchOptions, cb?: SearchCallbackFn<T>): void;
 
         synchronize(query?: any, options?: any): EventEmitter;
         esOptions(): Options
-        createMapping(body?: any, cb?: SearchCallbackFn<T>): void
-        esTruncate(cb?: SearchCallbackFn<T>): void
 
-        esCount(cb?: callbackFn<Response, Context>): void
-        esCount(query?: any, cb?: callbackFn<Response, Context>): void
+        createMapping(body?: RequestBody, cb?: CreateMappingCallbackFn): void
+        esTruncate(cb?: TruncateCallbackFn): void
 
-        refresh(cb?: callbackFn<Response, Context>): void
+        esCount(cb?: CountCallbackFn): void
+        esCount(query?: QueryContainer, cb?: CountCallbackFn): void
+
+        refresh(cb?: RefreshCallbackFn): void
     }
 }
 
 export {
 	Options,
 	PluginDocument,
-	EsSearchOptions
+	EsSearchOptions,
+	BulkIndexOptions,
+	BulkUnIndexOptions,
+	IndexMethodOptions,
+	BulkOptions,
+	SynchronizeOptions
 }

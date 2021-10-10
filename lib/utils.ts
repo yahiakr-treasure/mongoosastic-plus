@@ -1,7 +1,8 @@
 import { Model } from 'mongoose'
 import { EsSearchOptions, PluginDocument } from 'types'
-import { ApiError, ApiResponse } from '@elastic/elasticsearch'
+import { ApiResponse } from '@elastic/elasticsearch'
 import { client } from './index'
+import { Property, PropertyName } from '@elastic/elasticsearch/api/types'
 
 
 export function isString(subject: any): boolean {
@@ -19,7 +20,7 @@ export function getIndexName(doc: PluginDocument | Model<PluginDocument>): strin
 	else return indexName
 }
 
-export function filterMappingFromMixed(props: any): any {
+export function filterMappingFromMixed(props: Record<PropertyName, Property>): Record<PropertyName, Property> {
 	const filteredMapping: Record<string, any> = {}
 	Object.keys(props).map((key) => {
 		const field = props[key]
@@ -79,15 +80,15 @@ export function serialize(model: PluginDocument | Model<PluginDocument>, mapping
 
 export function deleteById(opt: Record<string, any>, cb?: CallableFunction): void {
 
-	const model = opt.model
+	const doc = opt.document
 
 	client.delete({
 		index: opt.index,
 		id: opt.id,
-	}, (err: ApiError, res: any) => {
+	}, {}, (err, res) => {
 		if (err) {
 			if (opt.tries <= 0) {
-				model.emit('es-removed', err, res)
+				doc.emit('es-removed', err, res)
 				if (cb) return cb(err)
 			}
 			opt.tries = --opt.tries
@@ -95,13 +96,13 @@ export function deleteById(opt: Record<string, any>, cb?: CallableFunction): voi
 				deleteById(opt, cb)
 			}, 500)
 		} else {
-			model.emit('es-removed', err, res)
+			doc.emit('es-removed', err, res)
 			if (cb) cb(err)
 		}
 	})
 }
 
-export function reformatESTotalNumber(res: any): any {
+export function reformatESTotalNumber(res: ApiResponse): ApiResponse {
 	Object.assign(res.body.hits, {
 		total: res.body.hits.total.value,
 		extTotal: res.body.hits.total
@@ -114,9 +115,9 @@ export function hydrate(res: ApiResponse, model: Model<PluginDocument>, opts: Es
 	const options = model.esOptions()
 
 	const results = res.body.hits
-	const resultsMap: Record<string, any> = {}
+	const resultsMap: Record<string, number> = {}
 
-	const ids = results.hits.map((result: any, idx: any) => {
+	const ids = results.hits.map((result: PluginDocument, idx: number) => {
 		resultsMap[result._id] = idx
 		return result._id
 	})
@@ -126,11 +127,11 @@ export function hydrate(res: ApiResponse, model: Model<PluginDocument>, opts: Es
 			$in: ids
 		}
 	})
-	const hydrateOptions = opts.hydrateOptions ? opts.hydrateOptions : options.hydrateOptions
+	const hydrateOptions = opts.hydrateOptions ? opts.hydrateOptions : options.hydrateOptions!
 
 	// Build Mongoose query based on hydrate options
 	// Example: {lean: true, sort: '-name', select: 'address name'}
-	query.setOptions(hydrateOptions!)
+	query.setOptions(hydrateOptions)
 
 	query.exec((err, docs) => {
 		let hits
@@ -146,7 +147,7 @@ export function hydrate(res: ApiResponse, model: Model<PluginDocument>, opts: Es
 			return cb(null, res)
 		}
 
-		if (hydrateOptions && hydrateOptions!.sort) {
+		if (hydrateOptions && hydrateOptions.sort) {
 			// Hydrate sort has precedence over ES result order
 			hits = docs
 		} else {
@@ -154,7 +155,7 @@ export function hydrate(res: ApiResponse, model: Model<PluginDocument>, opts: Es
 			docs.forEach(doc => {
 				docsMap[doc._id] = doc
 			})
-			hits = results.hits.map((result: any) => docsMap[result._id])
+			hits = results.hits.map((result: PluginDocument) => docsMap[result._id])
 		}
 
 		if (opts.highlight || opts.hydrateWithESResults) {

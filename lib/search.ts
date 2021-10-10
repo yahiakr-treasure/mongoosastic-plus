@@ -1,11 +1,12 @@
 import { Search } from '@elastic/elasticsearch/api/requestParams'
+import { QueryContainer, SearchRequest } from '@elastic/elasticsearch/api/types'
 import { Model } from 'mongoose'
 import { EsSearchOptions, PluginDocument } from 'types'
 import { client } from './index'
 import { getIndexName, hydrate, isString, isStringArray, reformatESTotalNumber } from './utils'
 
 
-export function search(this: Model<PluginDocument>, query: any, opts: EsSearchOptions, cb: CallableFunction): void {
+export function search(this: Model<PluginDocument>, query: QueryContainer, opts: EsSearchOptions, cb: CallableFunction): void {
 
 	if (cb === undefined) {
 		cb = opts as CallableFunction
@@ -21,7 +22,7 @@ export function search(this: Model<PluginDocument>, query: any, opts: EsSearchOp
 	return bindedEsSearch(fullQuery, opts, cb)
 }
 
-export function esSearch(this: Model<PluginDocument>, query: any, opts: EsSearchOptions, cb: CallableFunction): void {
+export function esSearch(this: Model<PluginDocument>, query: SearchRequest['body'], opts: EsSearchOptions, cb: CallableFunction): void {
 
 	if (cb === undefined) {
 		cb = opts as CallableFunction
