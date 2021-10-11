@@ -65,7 +65,7 @@ describe('Count', function () {
 					user: 'terry'
 				}
 			}, function (err, results) {
-				const body: any = results.body
+				const body: any = results?.body
 				expect(body.count).toEqual(1)
 				done(err)
 			})
@@ -75,7 +75,7 @@ describe('Count', function () {
 	it('should count a type without query', function (done) {
 		setTimeout(() => {
 			Comment.esCount(function (err, results) {
-				const body: any = results.body
+				const body: any = results?.body
 				expect(body.count).toEqual(2)
 				done(err)
 			})

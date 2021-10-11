@@ -1,7 +1,6 @@
 import { Model } from 'mongoose'
-import { EsSearchOptions, PluginDocument } from 'types'
+import { DeleteByIdOptions, EsSearchOptions, PluginDocument } from 'types'
 import { ApiResponse } from '@elastic/elasticsearch'
-import { client } from './index'
 import { Property, PropertyName } from '@elastic/elasticsearch/api/types'
 
 
@@ -78,11 +77,11 @@ export function serialize(model: PluginDocument | Model<PluginDocument>, mapping
 	return outModel
 }
 
-export function deleteById(opt: Record<string, any>, cb?: CallableFunction): void {
+export function deleteById(opt: DeleteByIdOptions, cb?: CallableFunction): void {
 
 	const doc = opt.document
 
-	client.delete({
+	opt.client.delete({
 		index: opt.index,
 		id: opt.id,
 	}, {}, (err, res) => {

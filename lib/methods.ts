@@ -1,6 +1,5 @@
 import { IndexMethodOptions, PluginDocument } from 'types'
 import { deleteById, getIndexName, serialize } from './utils'
-import { client } from './index'
 import { bulkAdd, bulkDelete } from './bulking'
 import Generator from './mapping'
 
@@ -12,6 +11,7 @@ export function index(this: PluginDocument, inOpts: IndexMethodOptions = {}, cb:
 	}
 
 	const options = this.esOptions()
+	const client = this.esClient()
 
 	const filter = options && options.filter
 
@@ -44,7 +44,7 @@ export function index(this: PluginDocument, inOpts: IndexMethodOptions = {}, cb:
 	}
 
 	if (opt.bulk) {
-		bulkAdd(opt)
+		bulkAdd({ client, ...opt })
 		setImmediate(() => { cb(null, this) })
 
 	} else {
@@ -55,10 +55,12 @@ export function index(this: PluginDocument, inOpts: IndexMethodOptions = {}, cb:
 export function unIndex(this: PluginDocument, cb?: CallableFunction): void {
 
 	const options = this.esOptions()
+	const client = this.esClient()
 
 	const indexName = getIndexName(this)
 
 	const opt = {
+		client: client,
 		index: indexName,
 		tries: 3,
 		id: this._id.toString(),

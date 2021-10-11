@@ -249,7 +249,7 @@ describe('indexing', function () {
 		it('should report errors', function (done) {
 			Tweet.search({
 				queriez: 'jamescarr'
-			}, {}, function (err: any, results: any) {
+			} as any, {}, function (err: any, results: any) {
 				expect(err.message).toMatch(/(SearchPhaseExecutionException|parsing_exception)/)
 				expect(results).toBeFalsy()
 				done()

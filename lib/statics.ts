@@ -3,7 +3,6 @@ import { callbackFn } from '@elastic/elasticsearch/lib/Helpers'
 import events from 'events'
 import { FilterQuery, Model } from 'mongoose'
 import { PluginDocument, SynchronizeOptions } from 'types'
-import { client } from './index'
 import { postSave } from './hooks'
 import { filterMappingFromMixed, getIndexName, reformatESTotalNumber } from './utils'
 import { bulkDelete } from './bulking'
@@ -19,6 +18,7 @@ export function createMapping(this: Model<PluginDocument>, body: RequestBody, cb
 	}
 
 	const options = this.esOptions()
+	const client = this.esClient()
 	
 	const indexName = getIndexName(this)
 	
@@ -139,6 +139,7 @@ export function synchronize(this: Model<PluginDocument>, query: FilterQuery<Plug
 export function esTruncate(this: Model<PluginDocument>, cb?: CallableFunction): void {
 
 	const options = this.esOptions()
+	const client = this.esClient()
 
 	const indexName = getIndexName(this)
 
@@ -173,7 +174,8 @@ export function esTruncate(this: Model<PluginDocument>, cb?: CallableFunction): 
 					index: indexName,
 					id: doc._id,
 					bulk: options.bulk,
-					routing: undefined
+					routing: undefined,
+					client: client
 				}
 				
 				if (options.routing) {
@@ -190,7 +192,7 @@ export function esTruncate(this: Model<PluginDocument>, cb?: CallableFunction): 
 }
 
 export function refresh(this: Model<PluginDocument>, cb: callbackFn<Response, Context>): void {
-	client.indices.refresh({
+	this.esClient().indices.refresh({
 		index: getIndexName(this)
 	}, cb)
 }
@@ -211,5 +213,5 @@ export function esCount(this: Model<PluginDocument>, query: QueryContainer, cb: 
 		index: getIndexName(this)
 	}
 
-	client.count(esQuery, cb)
+	this.esClient().count(esQuery, cb)
 }

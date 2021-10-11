@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ClientOptions, ApiResponse } from '@elastic/elasticsearch'
+import { ClientOptions, ApiResponse, Client } from '@elastic/elasticsearch'
 import { Highlight, BulkResponse, CountResponse, RefreshResponse, SearchResponse, QueryContainer, SearchRequest } from '@elastic/elasticsearch/api/types'
 import { RequestBody } from '@elastic/elasticsearch/lib/Transport'
 import { EventEmitter } from 'events'
@@ -59,16 +59,26 @@ declare interface BulkIndexOptions {
     body: any,
     bulk?: BulkOptions,
     refresh?: boolean,
-    routing?: RoutingFn
+    routing?: RoutingFn,
+    client: Client
 }
 
 declare interface BulkUnIndexOptions {
     index: string,
     id: string,
     bulk?: BulkOptions,
-    document?: Document,
+    document?: PluginDocument,
     tries?: number,
-    routing?: RoutingFn
+    routing?: RoutingFn,
+    client: Client
+}
+
+declare interface DeleteByIdOptions {
+    index: string,
+    id: string,
+    document: PluginDocument,
+    tries: number,
+    client: Client
 }
 
 declare class PluginDocument extends Document {
@@ -76,6 +86,7 @@ declare class PluginDocument extends Document {
 	unIndex(cb?: CallableFunction): void
 	emit(event: string, ...args: any): void
 	esOptions(): Options
+	esClient(): Client
 	on(event: string, cb?: CallableFunction): void
 	once(event: string, cb?: CallableFunction): void
 }
@@ -125,7 +136,9 @@ declare module 'mongoose' {
         esSearch(query: SearchRequest['body'], options?: EsSearchOptions, cb?: SearchCallbackFn<T>): void;
 
         synchronize(query?: any, options?: any): EventEmitter;
+        
         esOptions(): Options
+        esClient(): Client
 
         createMapping(body?: RequestBody, cb?: CreateMappingCallbackFn): void
         esTruncate(cb?: TruncateCallbackFn): void
@@ -145,5 +158,6 @@ export {
 	BulkUnIndexOptions,
 	IndexMethodOptions,
 	BulkOptions,
-	SynchronizeOptions
+	SynchronizeOptions,
+	DeleteByIdOptions
 }

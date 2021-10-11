@@ -1,5 +1,5 @@
+import { Client } from '@elastic/elasticsearch'
 import { BulkIndexOptions, BulkOptions, BulkUnIndexOptions } from 'types'
-import { client } from './index'
 
 let bulkBuffer: any[] = []
 let bulkTimeout: any
@@ -17,7 +17,7 @@ export function bulkAdd(opts: BulkIndexOptions): void {
 		}
 	}, opts.body]
 	
-	bulkIndex(instruction, opts.bulk as BulkOptions)
+	bulkIndex(instruction, opts.bulk as BulkOptions, opts.client)
 }
 
 export function bulkDelete(opts: BulkUnIndexOptions): void {
@@ -28,25 +28,25 @@ export function bulkDelete(opts: BulkUnIndexOptions): void {
 		}
 	}]
 	
-	bulkIndex(instruction, opts.bulk as BulkOptions)
+	bulkIndex(instruction, opts.bulk as BulkOptions, opts.client)
 }
 
-export function bulkIndex(instruction: any[], bulk: BulkOptions): void {
+export function bulkIndex(instruction: any[], bulk: BulkOptions, client: Client): void {
 
 	bulkBuffer = bulkBuffer.concat(instruction)
 
 	if (bulkBuffer.length >= bulk.size) {
-		flush()
+		flush(client)
 		clearBulkTimeout()
 	} else if (bulkTimeout === undefined) {
 		bulkTimeout = setTimeout(() => {
-			flush()
+			flush(client)
 			clearBulkTimeout()
 		}, bulk.delay)
 	}
 }
 
-function flush(): void {
+function flush(client: Client): void {
 	client.bulk({
 		body: bulkBuffer
 	}, (err, res) => {
