@@ -1,15 +1,16 @@
 import { Model } from 'mongoose'
-import { DeleteByIdOptions, EsSearchOptions, PluginDocument } from 'types'
+import { isEmpty } from 'lodash'
+import { DeleteByIdOptions, EsSearchOptions, GeneratedMapping, HydratedDocument, HydratedResults, PluginDocument } from 'types'
 import { ApiResponse } from '@elastic/elasticsearch'
-import { Property, PropertyName } from '@elastic/elasticsearch/api/types'
+import { Property, PropertyName, SearchResponse, TotalHits } from '@elastic/elasticsearch/api/types'
 
 
-export function isString(subject: any): boolean {
+export function isString(subject: unknown): boolean {
 	return typeof subject === 'string'
 }
 
-export function isStringArray(arr: any): boolean {
-	return arr.filter && arr.length === (arr.filter((item: any) => typeof item === 'string')).length
+export function isStringArray(arr: Array<unknown>): boolean {
+	return arr.filter && arr.length === (arr.filter((item: unknown) => typeof item === 'string')).length
 }
 
 export function getIndexName(doc: PluginDocument | Model<PluginDocument>): string {
@@ -20,14 +21,14 @@ export function getIndexName(doc: PluginDocument | Model<PluginDocument>): strin
 }
 
 export function filterMappingFromMixed(props: Record<PropertyName, Property>): Record<PropertyName, Property> {
-	const filteredMapping: Record<string, any> = {}
+	const filteredMapping: Record<PropertyName, Property> = {}
 	Object.keys(props).map((key) => {
 		const field = props[key]
 		if (field.type !== 'mixed') {
 			filteredMapping[key] = field
 			if (field.properties) {
 				filteredMapping[key].properties = filterMappingFromMixed(field.properties)
-				if (!Object.keys(filteredMapping[key].properties).length) {
+				if (isEmpty(filteredMapping[key].properties)) {
 					delete filteredMapping[key].properties
 				}
 			}
@@ -36,16 +37,16 @@ export function filterMappingFromMixed(props: Record<PropertyName, Property>): R
 	return filteredMapping
 }
 
-export function serialize(model: PluginDocument | Model<PluginDocument>, mapping: any): any {
+export function serialize(model: PluginDocument, mapping: GeneratedMapping): Record<string, unknown> | Record<string, unknown>[] | string {
 	let name
 
-	function _serializeObject(object: any, mappingData: any) {
-		const serialized: Record<string, any> = {}
+	function _serializeObject(object: PluginDocument, mappingData: GeneratedMapping) {
+		const serialized: Record<string, unknown> = {}
 		let field
 		let val
 		for (field in mappingData.properties) {
-			if (mappingData.properties.hasOwnProperty(field)) {
-				val = serialize.call(object, object[field], mappingData.properties[field])
+			if (mappingData.properties?.hasOwnProperty(field)) {
+				val = serialize.call(object, object[field as keyof PluginDocument], mappingData.properties[field])
 				if (val !== undefined) {
 					serialized[field] = val
 				}
@@ -101,22 +102,22 @@ export function deleteById(opt: DeleteByIdOptions, cb?: CallableFunction): void 
 	})
 }
 
-export function reformatESTotalNumber(res: ApiResponse): ApiResponse {
+export function reformatESTotalNumber<T = unknown>(res: ApiResponse<SearchResponse<T>>): ApiResponse<SearchResponse<T>> {
 	Object.assign(res.body.hits, {
-		total: res.body.hits.total.value,
+		total: (res.body.hits.total as TotalHits).value,
 		extTotal: res.body.hits.total
 	})
 	return res
 }
 
-export function hydrate(res: ApiResponse, model: Model<PluginDocument>, opts: EsSearchOptions, cb: CallableFunction): void {
+export function hydrate(res: ApiResponse<SearchResponse>, model: Model<PluginDocument>, opts: EsSearchOptions, cb: CallableFunction): void {
 
 	const options = model.esOptions()
 
 	const results = res.body.hits
 	const resultsMap: Record<string, number> = {}
 
-	const ids = results.hits.map((result: PluginDocument, idx: number) => {
+	const ids = results.hits.map((result, idx) => {
 		resultsMap[result._id] = idx
 		return result._id
 	})
@@ -126,7 +127,7 @@ export function hydrate(res: ApiResponse, model: Model<PluginDocument>, opts: Es
 			$in: ids
 		}
 	})
-	const hydrateOptions = opts.hydrateOptions ? opts.hydrateOptions : options.hydrateOptions!
+	const hydrateOptions = opts.hydrateOptions ? opts.hydrateOptions : options.hydrateOptions ? options.hydrateOptions : {}
 
 	// Build Mongoose query based on hydrate options
 	// Example: {lean: true, sort: '-name', select: 'address name'}
@@ -154,11 +155,11 @@ export function hydrate(res: ApiResponse, model: Model<PluginDocument>, opts: Es
 			docs.forEach(doc => {
 				docsMap[doc._id] = doc
 			})
-			hits = results.hits.map((result: PluginDocument) => docsMap[result._id])
+			hits = results.hits.map((result) => docsMap[result._id])
 		}
 
 		if (opts.highlight || opts.hydrateWithESResults) {
-			hits.forEach((doc: any) => {
+			hits.forEach((doc: HydratedDocument) => {
 				const idx = resultsMap[doc._id]
 				if (opts.highlight) {
 					doc._highlight = results.hits[idx].highlight
@@ -174,7 +175,7 @@ export function hydrate(res: ApiResponse, model: Model<PluginDocument>, opts: Es
 			})
 		}
 
-		results.hits = hits
+		results.hits = hits as HydratedResults
 		res.body.hits = results
 		cb(null, res)
 	})

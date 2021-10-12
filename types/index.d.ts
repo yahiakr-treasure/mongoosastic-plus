@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ClientOptions, ApiResponse, Client } from '@elastic/elasticsearch'
-import { Highlight, BulkResponse, CountResponse, RefreshResponse, SearchResponse, QueryContainer, SearchRequest } from '@elastic/elasticsearch/api/types'
+import { Highlight, BulkResponse, CountResponse, RefreshResponse, SearchResponse, QueryContainer, SearchRequest, TypeMapping, Hit } from '@elastic/elasticsearch/api/types'
 import { RequestBody } from '@elastic/elasticsearch/lib/Transport'
 import { EventEmitter } from 'events'
 import { Schema } from 'mongoose'
@@ -37,6 +37,10 @@ declare interface FlushCallbackFn {
 declare interface RefreshCallbackFn {
     (err: null | undefined, resp: ApiResponse<RefreshResponse>): void;
     (err: any, resp: null | undefined): void;
+}
+
+declare interface GeneratedMapping extends TypeMapping {
+    cast?(doc: any): any
 }
 
 declare interface BulkOptions {
@@ -90,6 +94,29 @@ declare class PluginDocument extends Document {
 	on(event: string, cb?: CallableFunction): void
 	once(event: string, cb?: CallableFunction): void
 }
+
+declare class HydratedDocument extends PluginDocument {
+    _highlight?: Record<string, string[]> | undefined
+    _esResult?: Hit<unknown>
+}
+
+declare type HydratedResults = any[]
+
+declare type IndexInstruction = {
+    index: {
+        _index: string,
+        _id: string,
+    }
+}
+
+declare type DeleteInstruction = {
+    delete: {
+        _index: string,
+        _id: string,
+    }
+}
+
+declare type BulkInstruction = IndexInstruction | DeleteInstruction | Record<string, unknown>
 
 declare type Options = {
     clientOptions?: ClientOptions,
@@ -159,5 +186,9 @@ export {
 	IndexMethodOptions,
 	BulkOptions,
 	SynchronizeOptions,
-	DeleteByIdOptions
+	DeleteByIdOptions,
+	GeneratedMapping,
+	HydratedDocument,
+	HydratedResults,
+	BulkInstruction
 }

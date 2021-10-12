@@ -1,11 +1,11 @@
 import { Client } from '@elastic/elasticsearch'
-import { BulkIndexOptions, BulkOptions, BulkUnIndexOptions } from 'types'
+import { BulkIndexOptions, BulkInstruction, BulkOptions, BulkUnIndexOptions } from 'types'
 
-let bulkBuffer: any[] = []
-let bulkTimeout: any
+let bulkBuffer: BulkInstruction[] = []
+let bulkTimeout: NodeJS.Timeout | undefined
 
 function clearBulkTimeout() {
-	clearTimeout(bulkTimeout)
+	clearTimeout(bulkTimeout as NodeJS.Timeout)
 	bulkTimeout = undefined
 }
 
@@ -31,7 +31,7 @@ export function bulkDelete(opts: BulkUnIndexOptions): void {
 	bulkIndex(instruction, opts.bulk as BulkOptions, opts.client)
 }
 
-export function bulkIndex(instruction: any[], bulk: BulkOptions, client: Client): void {
+export function bulkIndex(instruction: BulkInstruction[], bulk: BulkOptions, client: Client): void {
 
 	bulkBuffer = bulkBuffer.concat(instruction)
 

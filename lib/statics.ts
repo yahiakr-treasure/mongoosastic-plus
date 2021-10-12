@@ -1,4 +1,4 @@
-import { Context, QueryContainer } from '@elastic/elasticsearch/api/types'
+import { Context, QueryContainer, SearchResponse } from '@elastic/elasticsearch/api/types'
 import { callbackFn } from '@elastic/elasticsearch/lib/Helpers'
 import events from 'events'
 import { FilterQuery, Model } from 'mongoose'
@@ -7,7 +7,7 @@ import { postSave } from './hooks'
 import { filterMappingFromMixed, getIndexName, reformatESTotalNumber } from './utils'
 import { bulkDelete } from './bulking'
 import Generator from './mapping'
-import { RequestBody } from '@elastic/elasticsearch/lib/Transport'
+import { ApiResponse, RequestBody } from '@elastic/elasticsearch/lib/Transport'
 import { Search } from '@elastic/elasticsearch/api/requestParams'
 
 export function createMapping(this: Model<PluginDocument>, body: RequestBody, cb: CallableFunction): void {
@@ -161,14 +161,13 @@ export function esTruncate(this: Model<PluginDocument>, cb?: CallableFunction): 
 		batch: (options.bulk && options.bulk.batch) || 50
 	}
 
-	client.search(esQuery, (err, res) => {
+	client.search(esQuery, (err, res: ApiResponse<SearchResponse<PluginDocument>>) => {
 		if (err) {
 			if(cb) return cb(err)
 		}
 		res = reformatESTotalNumber(res)
 		if (res.body.hits.total) {
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			res.body.hits.hits.forEach((doc: any) => {
+			res.body.hits.hits.forEach((doc) => {
 				
 				const opts = {
 					index: indexName,
@@ -178,7 +177,7 @@ export function esTruncate(this: Model<PluginDocument>, cb?: CallableFunction): 
 					client: client
 				}
 				
-				if (options.routing) {
+				if (options.routing && doc._source != null) {
 					doc._source._id = doc._id
 					opts.routing = options.routing(doc._source)
 				}

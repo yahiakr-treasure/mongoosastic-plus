@@ -1,5 +1,6 @@
+import { ApiResponse } from '@elastic/elasticsearch'
 import { Search } from '@elastic/elasticsearch/api/requestParams'
-import { QueryContainer, SearchRequest } from '@elastic/elasticsearch/api/types'
+import { QueryContainer, SearchRequest, SearchResponse } from '@elastic/elasticsearch/api/types'
 import { Model } from 'mongoose'
 import { EsSearchOptions, PluginDocument } from 'types'
 import { getIndexName, hydrate, isString, isStringArray, reformatESTotalNumber } from './utils'
@@ -56,7 +57,7 @@ export function esSearch(this: Model<PluginDocument>, query: SearchRequest['body
 		}
 	})
 
-	client.search(esQuery, (err, res) => {
+	client.search(esQuery, (err, res: ApiResponse<SearchResponse>) => {
 		if (err) {
 			return cb(err)
 		}
