@@ -5,6 +5,7 @@ import { config } from './config'
 import mongoosastic from '../lib/index'
 import { ITweet, Tweet } from './models/tweet'
 import { QueryContainer } from '@elastic/elasticsearch/api/types'
+import { PluginDocument } from 'types'
 
 const esClient = config.getClient()
 
@@ -29,6 +30,16 @@ const TalkSchema = new Schema({
 const BumSchema = new Schema({
 	name: String
 })
+
+interface IPerson extends PluginDocument {
+	name: string,
+	phone: string,
+	address: string,
+	life: {
+		born: number,
+		died: number
+	}
+}
 
 const PersonSchema = new Schema({
 	name: {
@@ -78,7 +89,7 @@ DogSchema.plugin(mongoosastic, {
 	indexAutomatically: false
 })
 
-const Person = mongoose.model('Person', PersonSchema)
+const Person = mongoose.model<IPerson>('Person', PersonSchema)
 const Talk = mongoose.model('Talk', TalkSchema)
 const Bum = mongoose.model('bum', BumSchema)
 const Dog = mongoose.model('dog', DogSchema)
@@ -413,11 +424,14 @@ describe('indexing', function () {
 				query_string: {
 					query: 'James'
 				}
-			}, function (err: any, res: any) {
-				expect(res.body.hits.hits[0].address).toEqual('Exampleville, MO')
-				expect(res.body.hits.hits[0].name).toEqual('James Carr')
-				expect(res.body.hits.hits[0]).not.toHaveProperty('phone')
-				expect(res.body.hits.hits[0]).not.toBeInstanceOf(Person)
+			}, function (err, res) {
+
+				const hit = res?.body.hits.hydrated[0] as IPerson
+
+				expect(hit.address).toEqual('Exampleville, MO')
+				expect(hit.name).toEqual('James Carr')
+				expect(hit).not.toHaveProperty('phone')
+				expect(hit).not.toBeInstanceOf(Person)
 				done()
 			})
 		})
@@ -460,7 +474,7 @@ describe('indexing', function () {
 			}, {
 				hydrate: true
 			}, function (err, res) {
-				const talk = res?.body.hits.hits[0]
+				const talk = res?.body.hits.hydrated[0]
 
 				expect(res?.body.hits.total).toEqual(1)
 				expect(talk).toHaveProperty('title')
@@ -491,8 +505,8 @@ describe('indexing', function () {
 					query_string: {
 						query: 'Bob'
 					}
-				}, {}, function (err, res) {
-					const hit = res?.body.hits.hits[0] as any
+				}, function (err, res) {
+					const hit = res?.body.hits.hydrated[0] as IPerson
 
 					expect(hit.address).toEqual('Exampleville, MO')
 					expect(hit.name).toEqual('Bob Carr')					
@@ -518,7 +532,7 @@ describe('indexing', function () {
 					lean: true
 				}
 			}, function (err, res) {
-				const talk = res?.body.hits.hits[0]
+				const talk = res?.body.hits.hydrated[0]
 
 				expect(res?.body.hits.total).toEqual(1)
 				expect(talk).toHaveProperty('title')

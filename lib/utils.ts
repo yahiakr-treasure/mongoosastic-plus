@@ -1,6 +1,6 @@
 import { Model } from 'mongoose'
 import { isEmpty } from 'lodash'
-import { DeleteByIdOptions, EsSearchOptions, GeneratedMapping, HydratedDocument, HydratedResults, PluginDocument } from 'types'
+import { DeleteByIdOptions, EsSearchOptions, GeneratedMapping, HydratedSearchResults, PluginDocument } from 'types'
 import { ApiResponse } from '@elastic/elasticsearch'
 import { Property, PropertyName, SearchResponse, TotalHits } from '@elastic/elasticsearch/api/types'
 
@@ -113,8 +113,10 @@ export function reformatESTotalNumber<T = unknown>(res: ApiResponse<SearchRespon
 export function hydrate(res: ApiResponse<SearchResponse>, model: Model<PluginDocument>, opts: EsSearchOptions, cb: CallableFunction): void {
 
 	const options = model.esOptions()
+	
+	const clonedRes = res as ApiResponse<HydratedSearchResults>
+	const results = clonedRes.body.hits
 
-	const results = res.body.hits
 	const resultsMap: Record<string, number> = {}
 
 	const ids = results.hits.map((result, idx) => {
@@ -143,6 +145,7 @@ export function hydrate(res: ApiResponse<SearchResponse>, model: Model<PluginDoc
 
 		if (!docs || docs.length === 0) {
 			results.hits = []
+			results.hydrated = []
 			res.body.hits = results
 			return cb(null, res)
 		}
@@ -159,7 +162,7 @@ export function hydrate(res: ApiResponse<SearchResponse>, model: Model<PluginDoc
 		}
 
 		if (opts.highlight || opts.hydrateWithESResults) {
-			hits.forEach((doc: HydratedDocument) => {
+			hits.forEach((doc) => {
 				const idx = resultsMap[doc._id]
 				if (opts.highlight) {
 					doc._highlight = results.hits[idx].highlight
@@ -175,7 +178,8 @@ export function hydrate(res: ApiResponse<SearchResponse>, model: Model<PluginDoc
 			})
 		}
 
-		results.hits = hits as HydratedResults
+		results.hits = []
+		results.hydrated = hits
 		res.body.hits = results
 		cb(null, res)
 	})

@@ -3,6 +3,12 @@
 import mongoose, { Schema } from 'mongoose'
 import { config } from './config'
 import mongoosastic from '../lib/index'
+import { PluginDocument } from 'types'
+
+interface IText extends PluginDocument {
+	title: string,
+	quote: string
+}
 
 const textSchema = new Schema({
 	title: String,
@@ -11,7 +17,7 @@ const textSchema = new Schema({
 
 textSchema.plugin(mongoosastic)
 
-const Text = mongoose.model('text', textSchema)
+const Text = mongoose.model<IText>('text', textSchema)
 
 const texts = [
 	new Text({
@@ -94,11 +100,11 @@ describe('Hydrate with ES data', function () {
 
 				expect(res?.body.hits.total).toEqual(3)
 
-				res?.body.hits.hits.forEach(function (text: any) {
+				res?.body.hits.hydrated.forEach(function (text) {
 					expect(text).toHaveProperty('_esResult')
 
 					expect(text._esResult).toHaveProperty('_index')
-					expect(text._esResult._index).toEqual('texts')
+					expect(text._esResult?._index).toEqual('texts')
 
 					expect(text._esResult).toHaveProperty('_id')
 					expect(text._esResult).toHaveProperty('_type')
@@ -130,11 +136,11 @@ describe('Hydrate with ES data', function () {
 				
 				expect(res?.body.hits.total).toEqual(3)
 
-				res?.body.hits.hits.forEach(function (text: any) {
+				res?.body.hits.hydrated.forEach(function (text) {
 					expect(text).toHaveProperty('_esResult')
 
 					expect(text._esResult).toHaveProperty('_index')
-					expect(text._esResult._index).toEqual('texts')
+					expect(text._esResult?._index).toEqual('texts')
 
 					expect(text._esResult).toHaveProperty('_id')
 					expect(text._esResult).toHaveProperty('_type')
@@ -142,7 +148,7 @@ describe('Hydrate with ES data', function () {
 					expect(text._esResult).toHaveProperty('highlight')
 
 					expect(text._esResult).toHaveProperty('_source')
-					expect(text._esResult._source).toHaveProperty('title')
+					expect(text._esResult?._source).toHaveProperty('title')
 				})
 
 				done()

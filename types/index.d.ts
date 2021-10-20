@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ClientOptions, ApiResponse, Client } from '@elastic/elasticsearch'
-import { Highlight, BulkResponse, CountResponse, RefreshResponse, SearchResponse, QueryContainer, SearchRequest, TypeMapping, Hit, PropertyName, Property } from '@elastic/elasticsearch/api/types'
+import { Highlight, BulkResponse, CountResponse, RefreshResponse, SearchResponse, QueryContainer, SearchRequest, TypeMapping, Hit, PropertyName, Property, HitsMetadata } from '@elastic/elasticsearch/api/types'
 import { RequestBody } from '@elastic/elasticsearch/lib/Transport'
 import { EventEmitter } from 'events'
 import { Schema } from 'mongoose'
@@ -11,7 +11,7 @@ declare interface FilterFn {
     (doc: Document): boolean;
 }
 declare interface TransformFn {
-    (doc: Document, ...args: any): any;
+    (body: Record<string, unknown>, doc: Document): any;
 }
 declare interface RoutingFn {
     (doc: Document): any;
@@ -23,7 +23,7 @@ declare interface TruncateCallbackFn {
     (err: any | null | undefined): void;
 }
 declare interface SearchCallbackFn<T> {
-    (err: null | undefined, resp: ApiResponse<SearchResponse<T>>): void;
+    (err: null | undefined, resp: ApiResponse<HydratedSearchResults<T>>): void;
     (err: any, resp: null | undefined): void;
 }
 declare interface CountCallbackFn {
@@ -85,24 +85,29 @@ declare interface DeleteByIdOptions {
     client: Client
 }
 
-declare class PluginDocument extends Document {
-	index(cb?: CallableFunction): void
-	index(opts: IndexMethodOptions, cb?: CallableFunction): void
-    
-	unIndex(cb?: CallableFunction): void
-	emit(event: string, ...args: any): void
-	esOptions(): Options
-	esClient(): Client
-	on(event: string, cb?: CallableFunction): void
-	once(event: string, cb?: CallableFunction): void
+declare interface HydratedSearchResults<TDocument = unknown> extends SearchResponse<TDocument> {
+    hits: HydratedSearchHits<TDocument>
 }
 
-declare class HydratedDocument extends PluginDocument {
+declare interface HydratedSearchHits<TDocument> extends HitsMetadata<TDocument> {
+    hydrated: Array<TDocument>
+}
+
+declare class PluginDocument<TDocument = any> extends Document<TDocument> {
+
     _highlight?: Record<string, string[]> | undefined
-    _esResult?: Hit<unknown>
+    _esResult?: Hit<TDocument>
+    
+    index(cb?: CallableFunction): void
+    index(opts: IndexMethodOptions, cb?: CallableFunction): void
+    
+    unIndex(cb?: CallableFunction): void
+    emit(event: string, ...args: any): void
+    esOptions(): Options
+    esClient(): Client
+    on(event: string, cb?: CallableFunction): void
+    once(event: string, cb?: CallableFunction): void
 }
-
-declare type HydratedResults = any[]
 
 declare type IndexInstruction = {
     index: {
@@ -133,7 +138,7 @@ declare type Options = {
     indexAutomatically?: boolean,
     forceIndexRefresh?: boolean,
     properties?: any,
-    customSerialize?(model: PluginDocument | Model<PluginDocument>, mapping: any): any;
+    customSerialize?(model: Document | Model<Document>, ...args: any): any;
     saveOnSynchronize?: boolean
 }
 
@@ -190,7 +195,6 @@ export {
 	SynchronizeOptions,
 	DeleteByIdOptions,
 	GeneratedMapping,
-	HydratedDocument,
-	HydratedResults,
+	HydratedSearchResults,
 	BulkInstruction
 }

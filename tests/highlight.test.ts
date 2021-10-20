@@ -3,6 +3,12 @@
 import mongoose, { Schema } from 'mongoose'
 import { config } from './config'
 import mongoosastic from '../lib/index'
+import { PluginDocument } from 'types'
+
+interface IText extends PluginDocument {
+	title: string,
+	quote: string
+}
 
 const TextSchema = new Schema({
 	title: String,
@@ -11,7 +17,7 @@ const TextSchema = new Schema({
 
 TextSchema.plugin(mongoosastic)
 
-const Text = mongoose.model('Text', TextSchema)
+const Text = mongoose.model<IText>('Text', TextSchema)
 
 const texts = [
 	new Text({
@@ -107,11 +113,11 @@ describe('Highlight search', function () {
 				}, function (err, res) {
 					expect(res?.body.hits.total).toEqual(3)
 	
-					res?.body.hits.hits.forEach(function (text: any) {
+					res?.body.hits.hydrated.forEach(function (text) {
 						expect(text).toHaveProperty('_highlight')
 						expect(text._highlight).toHaveProperty('quote')
 	
-						text._highlight?.quote.forEach(function (query: any) {
+						text._highlight?.quote.forEach(function (query) {
 							expect(responses).toContainEqual(query)
 						})
 					})

@@ -3,6 +3,7 @@
 import mongoose, { Document, Schema } from 'mongoose'
 import { config } from './config'
 import mongoosastic from '../lib/index'
+import { Options } from 'types'
 
 const FoodSchema = new Schema({
 	name: {
@@ -13,13 +14,13 @@ FoodSchema.virtual('type').get(() => { return 'dinner' })
 FoodSchema.set('toObject', { getters: true, virtuals: true, versionKey: false })
 
 FoodSchema.plugin(mongoosastic, {
-	customSerialize (model: Document) {
+	customSerialize: function(model: Document) {
 		const data = model.toObject()
 		delete data.id
 		delete data._id
 		return data
 	}
-})
+} as Options)
 
 const Food = mongoose.model('Food', FoodSchema)
 
