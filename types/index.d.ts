@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ClientOptions, ApiResponse, Client } from '@elastic/elasticsearch'
-import { Highlight, BulkResponse, CountResponse, RefreshResponse, SearchResponse, QueryContainer, SearchRequest, TypeMapping, Hit } from '@elastic/elasticsearch/api/types'
+import { Highlight, BulkResponse, CountResponse, RefreshResponse, SearchResponse, QueryContainer, SearchRequest, TypeMapping, Hit, PropertyName, Property } from '@elastic/elasticsearch/api/types'
 import { RequestBody } from '@elastic/elasticsearch/lib/Transport'
 import { EventEmitter } from 'events'
 import { Schema } from 'mongoose'
@@ -17,7 +17,7 @@ declare interface RoutingFn {
     (doc: Document): any;
 }
 declare interface CreateMappingCallbackFn {
-    (err: any | null | undefined, inputMapping: any | null | undefined): void;
+    (err: any | null | undefined, inputMapping: Record<PropertyName, Property> | null | undefined): void;
 }
 declare interface TruncateCallbackFn {
     (err: any | null | undefined): void;
@@ -87,6 +87,8 @@ declare interface DeleteByIdOptions {
 
 declare class PluginDocument extends Document {
 	index(cb?: CallableFunction): void
+	index(opts: IndexMethodOptions, cb?: CallableFunction): void
+    
 	unIndex(cb?: CallableFunction): void
 	emit(event: string, ...args: any): void
 	esOptions(): Options

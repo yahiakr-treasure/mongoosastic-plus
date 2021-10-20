@@ -52,7 +52,7 @@ describe('Custom Properties for Mapping', function () {
 			}, {
 				sort: 'created:asc'
 			}, function (err, results) {
-				const hit: any = results?.body.hits.hits[0]._source
+				const hit = results?.body.hits.hits[0]._source
         
 				expect(results?.body.hits.total).toEqual(1)
 				expect(hit.created).toBeDefined()

@@ -7,6 +7,10 @@ import { PluginDocument } from 'types'
 
 const indexName = 'es-test'
 
+interface IDummy extends PluginDocument {
+    text: string;
+}
+
 const DummySchema = new Schema({
 	text: String
 })
@@ -21,8 +25,8 @@ DummySchemaRefresh.plugin(mongoosastic, {
 	forceIndexRefresh: true
 })
 
-const Dummy = mongoose.model('Dummy', DummySchema)
-const DummyRefresh = mongoose.model('DummyRefresh', DummySchemaRefresh)
+const Dummy = mongoose.model<IDummy>('Dummy', DummySchema)
+const DummyRefresh = mongoose.model<IDummy>('DummyRefresh', DummySchemaRefresh)
 
 describe('forceIndexRefresh connection option', function () {
 
@@ -32,17 +36,6 @@ describe('forceIndexRefresh connection option', function () {
 		for (const model of [Dummy, DummyRefresh]) {
 			await model.deleteMany()
 		}
-		// connect to mongodb
-		// Dummy.createMapping({
-		// 	analysis: {
-		// 		analyzer: {
-		// 			content: {
-		// 				type: 'custom',
-		// 				tokenizer: 'whitespace'
-		// 			}
-		// 		}
-		// 	}
-		// }, done)
 	})
 
 	afterAll(async function() {
@@ -83,15 +76,15 @@ describe('forceIndexRefresh connection option', function () {
 	})
 })
 
-async function doInsertOperation (Model: Model<PluginDocument>, object: PluginDocument, indexName: string, refresh: boolean, callback: CallableFunction) {
+async function doInsertOperation (Model: Model<IDummy>, object: PluginDocument, indexName: string, refresh: boolean, callback: CallableFunction) {
 	// save object
 	const savedObject = await object.save()
 
-	savedObject.on('es-indexed', function (err: any) {
+	savedObject.on('es-indexed', function () {
 		// look for the object just saved
 		Model.search({
 			term: { _id: savedObject._id }
-		}, {}, function (err, results) {
+		}, function (err, results) {
 			if (refresh) {
 				expect(results?.body.hits.total).toEqual(1)
 			} else {
@@ -102,21 +95,21 @@ async function doInsertOperation (Model: Model<PluginDocument>, object: PluginDo
 	})
 }
 
-async function doUpdateOperation (Model: Model<PluginDocument>, object: PluginDocument, newText: string, indexName: string, refresh: boolean, callback: CallableFunction) {
+async function doUpdateOperation (Model: Model<IDummy>, object: PluginDocument, newText: string, indexName: string, refresh: boolean, callback: CallableFunction) {
 	// save object
 	const savedObject = await object.save()
 
 	const updatedObject = await Model.findOneAndUpdate({ _id: savedObject._id }, { text: newText }, { new: true })
 
-	updatedObject?.on('es-indexed', function (err: any) {
+	updatedObject?.on('es-indexed', function () {
 		// look for the object just saved
 		Model.search({
 			term: { _id: savedObject._id }
-		}, {}, function (err, results) {
+		}, function (err, results) {
 			if (refresh) {
-				const hit = results?.body.hits.hits[0]._source as any
+				const hit = results?.body.hits.hits[0]._source
 				expect(results?.body.hits.total).toEqual(1)
-				expect(hit.text).toEqual(newText)
+				expect(hit?.text).toEqual(newText)
 			} else {
 				expect(results?.body.hits.total).toEqual(0)
 			}

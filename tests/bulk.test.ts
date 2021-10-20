@@ -52,7 +52,7 @@ describe('Bulk mode', function () {
 		setTimeout(function () {
 			Book.search({
 				match_all: {}
-			}, {}, function (err, results) {
+			}, function (err, results) {
 				expect(results).toHaveProperty('body')
 				expect(results?.body).toHaveProperty('hits')
 				expect(results?.body.hits).toHaveProperty('total', 52)

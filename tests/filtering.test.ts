@@ -80,7 +80,7 @@ describe('Filter mode', function () {
 		config.createModelAndEnsureIndex(Movie, {
 			title: 'REC',
 			genre: 'horror'
-		}, function (errSave: any, movie: any) {
+		}, function (errSave: unknown, movie: any) {
 			Movie.search({
 				term: {
 					title: 'rec'

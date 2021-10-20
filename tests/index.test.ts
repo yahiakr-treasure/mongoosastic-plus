@@ -3,7 +3,8 @@
 import mongoose, { Schema } from 'mongoose'
 import { config } from './config'
 import mongoosastic from '../lib/index'
-import { Tweet } from './models/tweet'
+import { ITweet, Tweet } from './models/tweet'
+import { QueryContainer } from '@elastic/elasticsearch/api/types'
 
 const esClient = config.getClient()
 
@@ -102,7 +103,7 @@ describe('indexing', function () {
 
 	describe('Creating Index', function () {
 		it('should create index if none exists', function (done) {
-			Tweet.createMapping(undefined, function (err: any, response: any) {
+			Tweet.createMapping(undefined, function (err, response) {
 				expect(response).toBeTruthy()
 				expect(response).not.toHaveProperty('error')
 				done()
@@ -119,7 +120,7 @@ describe('indexing', function () {
 						}
 					}
 				}
-			}, function (err: any, response: any) {
+			}, function (err, response) {
 				expect(response).toBeTruthy()
 				expect(response).not.toHaveProperty('error')
 				done()
@@ -127,7 +128,7 @@ describe('indexing', function () {
 		})
 
 		it('should update index if one already exists', function (done) {
-			Tweet.createMapping(undefined, function (err: any, response: any) {
+			Tweet.createMapping(undefined, function (err, response) {
 				expect(response).not.toHaveProperty('error')
 				done()
 			})
@@ -163,9 +164,9 @@ describe('indexing', function () {
 				query_string: {
 					query: 'Riak'
 				}
-			}, {}, function (err: any, results: any) {
-				expect(results.body.hits.total).toEqual(1)
-				expect(results.body.hits.hits[0]._source.message).toEqual('I like Riak better')
+			}, function (err, results) {
+				expect(results?.body.hits.total).toEqual(1)
+				expect(results?.body.hits.hits[0]._source?.message).toEqual('I like Riak better')
 				done()
 			})
 		})
@@ -175,15 +176,15 @@ describe('indexing', function () {
 				query_string: {
 					query: 'jamescarr'
 				}
-			}, {}, function (err: any, results: any) {
-				expect(results.body.hits.total).toEqual(1)
-				expect(results.body.hits.hits[0]._source.message).toEqual('I like Riak better')
+			}, function (err, results) {
+				expect(results?.body.hits.total).toEqual(1)
+				expect(results?.body.hits.hits[0]._source?.message).toEqual('I like Riak better')
 				done()
 			})
 		})
 
 		it('should reindex when findOneAndUpdate', async function(done) {
-			const doc = await Tweet.findOneAndUpdate({
+			await Tweet.findOneAndUpdate({
 				message: 'I like Riak better'
 			}, {
 				message: 'I like Jack better'
@@ -196,9 +197,9 @@ describe('indexing', function () {
 					query_string: {
 						query: 'Jack'
 					}
-				}, {}, function (err: any, results: any) {
-					expect(results.body.hits.total).toEqual(1)
-					expect(results.body.hits.hits[0]._source.message).toEqual('I like Jack better')
+				}, function (err, results) {
+					expect(results?.body.hits.total).toEqual(1)
+					expect(results?.body.hits.hits[0]._source?.message).toEqual('I like Jack better')
 					done()
 				})
 			}, config.INDEXING_TIMEOUT)
@@ -233,14 +234,14 @@ describe('indexing', function () {
 					query_string: {
 						query: 'insertMany'
 					}
-				}, {}, (error: any, results: any) => {
+				}, (error, results) => {
 					
-					expect(results.body.hits.total).toEqual(2)
+					expect(results?.body.hits.total).toEqual(2)
 
 					const expected = tweets.map((doc) => doc.message)
-					const searched = results.body.hits.hits.map((doc: any) => doc._source.message)
+					const searched = results?.body.hits.hits.map((doc) => doc._source?.message)
 
-					expect(expected.sort()).toEqual(searched.sort())
+					expect(expected.sort()).toEqual(searched?.sort())
 					done()
 				})
 			}, config.INDEXING_TIMEOUT)
@@ -249,7 +250,7 @@ describe('indexing', function () {
 		it('should report errors', function (done) {
 			Tweet.search({
 				queriez: 'jamescarr'
-			} as any, {}, function (err: any, results: any) {
+			} as QueryContainer, {}, function (err, results) {
 				expect(err.message).toMatch(/(SearchPhaseExecutionException|parsing_exception)/)
 				expect(results).toBeFalsy()
 				done()
@@ -259,7 +260,7 @@ describe('indexing', function () {
 
 	describe('Removing', function () {
 
-		let tweet: any = null
+		let tweet: ITweet
 
 		beforeEach(function (done) {
 			tweet = new Tweet({
@@ -277,8 +278,8 @@ describe('indexing', function () {
 					query_string: {
 						query: 'shouldnt'
 					}
-				}, {}, function (err: any, res: any) {
-					expect(res.body.hits.total).toEqual(0)
+				}, function (err, res) {
+					expect(res?.body.hits.total).toEqual(0)
 					done()
 				})
 			}, config.INDEXING_TIMEOUT)
@@ -291,8 +292,8 @@ describe('indexing', function () {
 						query_string: {
 							query: 'shouldnt'
 						}
-					}, {}, function (err: any, res: any) {
-						expect(res.body.hits.total).toEqual(0)
+					}, function (err, res) {
+						expect(res?.body.hits.total).toEqual(0)
 						done()
 					})
 				}, config.INDEXING_TIMEOUT)
@@ -306,10 +307,10 @@ describe('indexing', function () {
 			const tweet = new Tweet()
 			let triggerRemoved = false
 
-			tweet.on('es-removed', function (err: any, res: any) {
+			tweet.on('es-removed', function() {
 				triggerRemoved = true
 			})
-			tweet.unIndex(function (err: any) {
+			tweet.unIndex(function (err: unknown) {
 				expect(err).toBeTruthy()
 				expect(triggerRemoved).toEqual(true)
 				done()
@@ -341,7 +342,7 @@ describe('indexing', function () {
 		it('should be able to execute findOneAndRemove if document doesn\'t exist', function (done) {
 			Tweet.findOneAndRemove({
 				message: 'Not existing document'
-			}, {}, (err: any, doc: any) => {
+			}, {}, (err, doc) => {
 				expect(err).toBeFalsy()
 				expect(doc).toBeFalsy()
 				done()
@@ -378,9 +379,9 @@ describe('indexing', function () {
 				query_string: {
 					query: 'Dude'
 				}
-			}, {}, function (err: any, res: any) {
-				expect(res.body.hits.total).toEqual(1)
-				expect(res.body.hits.hits[0]._source.user).toEqual('Dude')
+			}, function (err, res) {
+				expect(res?.body.hits.total).toEqual(1)
+				expect(res?.body.hits.hits[0]._source?.user).toEqual('Dude')
 				done()
 			})
 		})
@@ -390,9 +391,9 @@ describe('indexing', function () {
 				query_string: {
 					query: 'Dude'
 				}
-			}, {}, function (err: any, res: any) {
-				expect(res.body.hits.total).toEqual(1)
-				expect(res.body.hits.hits[0]._source.title).toEqual('Dude')
+			}, function (err, res) {
+				expect(res?.body.hits.total).toEqual(1)
+				expect(res?.body.hits.hits[0]._source.title).toEqual('Dude')
 				done()
 			})
 		})
@@ -412,7 +413,7 @@ describe('indexing', function () {
 				query_string: {
 					query: 'James'
 				}
-			}, {}, function (err: any, res: any) {
+			}, function (err: any, res: any) {
 				expect(res.body.hits.hits[0].address).toEqual('Exampleville, MO')
 				expect(res.body.hits.hits[0].name).toEqual('James Carr')
 				expect(res.body.hits.hits[0]).not.toHaveProperty('phone')

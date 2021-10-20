@@ -95,7 +95,7 @@ describe('GeoTest', function () {
 			}, function (err, res) {
 				if (err) throw err
 
-				const frame = res?.body.hits.hits[0]._source.frame as any
+				const frame = res?.body.hits.hits[0]._source.frame
 
 				expect(res?.body.hits.total).toEqual(2)
 
@@ -129,7 +129,7 @@ describe('GeoTest', function () {
 						sort: 'myId:asc'
 					}, function (err, res) {
 
-						const frame = res?.body.hits.hits[0]._source.frame as any
+						const frame = res?.body.hits.hits[0]._source.frame
 
 						expect(res?.body.hits.total).toEqual(2)
 

@@ -4,12 +4,16 @@ import mongoose, { Schema } from 'mongoose'
 import { config } from './config'
 import mongoosastic from '../lib/index'
 
+interface ITask {
+	content: string
+}
+
 const TaskSchema = new Schema({
 	content: String
 })
 
 TaskSchema.plugin(mongoosastic, {
-	routing: function (doc: any) {
+	routing: function (doc: ITask) {
 		return doc.content
 	}
 })
@@ -32,7 +36,7 @@ describe('Routing', function () {
 
 	it('should found task if no routing',async function(done) {
 
-		config.createModelAndEnsureIndex(Task, { content: Date.now() }, function(err: any, task: any){
+		config.createModelAndEnsureIndex(Task, { content: Date.now() }, function(err: unknown, task: ITask){
 			Task.search({
 				query_string: {
 					query: task.content
@@ -46,7 +50,7 @@ describe('Routing', function () {
 
 	it('should found task if routing with task.content', async function(done) {
 
-		config.createModelAndEnsureIndex(Task, { content: Date.now() }, function(err: any, task: any){
+		config.createModelAndEnsureIndex(Task, { content: Date.now() }, function(err: unknown, task: ITask){
 			Task.search({
 				query_string: {
 					query: task.content
@@ -63,7 +67,7 @@ describe('Routing', function () {
 
 	it('should not found task if routing with invalid routing',async function(done) {
 		
-		config.createModelAndEnsureIndex(Task, { content: Date.now() }, function(err: any, task: any){
+		config.createModelAndEnsureIndex(Task, { content: Date.now() }, function(err: unknown, task: ITask){
 			Task.search({
 				query_string: {
 					query: task.content

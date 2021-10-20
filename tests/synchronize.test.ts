@@ -24,7 +24,7 @@ const Book = mongoose.model('Book', BookSchema)
 
 describe('Synchronize', () => {
 	
-	let books: any
+	let books
 
 	beforeAll(function() {
 		jest.setTimeout(10000)

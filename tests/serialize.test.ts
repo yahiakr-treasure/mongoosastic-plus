@@ -22,7 +22,7 @@ const PersonSchema = new Schema({
 	}],
 	somethingToCast: {
 		type: String,
-		es_cast: function (element: any) {
+		es_cast: function (element: string) {
 			return element + ' has been cast'
 		}
 	}
@@ -48,7 +48,7 @@ describe('serialize', function () {
 			date: new Date(Date.parse('06/17/1962'))
 		}],
 		somethingToCast: 'Something'
-	}) as any
+	})
 
 	// another person with missing parts to test robustness
 	const millionnaire = new Person({
