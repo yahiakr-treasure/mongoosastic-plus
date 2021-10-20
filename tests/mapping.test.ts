@@ -439,6 +439,12 @@ describe('MappingGenerator', function () {
 		})
 
 		it('excludes a virtual property from mapping', function (done) {
+			interface IPerson {
+				first_name: string,
+				last_name: string,
+				age: number,
+			}
+
 			const PersonSchema = new Schema({
 				first_name: {
 					type: String
@@ -451,7 +457,7 @@ describe('MappingGenerator', function () {
 				}
 			})
 
-			PersonSchema.virtual('birthYear').set(function (this:any, year: any) {
+			PersonSchema.virtual('birthYear').set(function (this: IPerson, year: number) {
 				this.age = new Date().getFullYear() - year
 			})
 
@@ -474,14 +480,14 @@ describe('MappingGenerator', function () {
 
 		it('should not map type mixed on mixed fields', function (done) {
 
-			MyModel.createMapping(undefined, (err, mapping) => {
+			MyModel.createMapping((err: unknown) => {
 				if (err) return done(err)
 
 				setTimeout(() => {
 					MyModel.search({
 						query_string: { query: 'mixed' }
 					}, {}, (err, res) => {
-						const source: any = res?.body.hits.hits[0]._source
+						const source = res?.body.hits.hits[0]._source
 						
 						// source.mixed_field.should.eql('mixed')
 						expect(source.mixed_field).toEqual('mixed')

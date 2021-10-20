@@ -27,47 +27,51 @@ describe('Index Method', function () {
 	})
 
 	it('should be able to index it directly without saving', async function (done) {
-		const doc: any = await Tweet.findOne({ message: 'I know kung-fu!' })
+		const doc = await Tweet.findOne({ message: 'I know kung-fu!' })
 
-		doc.message = 'I know nodejitsu!'
+		if(doc) {
+			doc.message = 'I know nodejitsu!'
 		
-		doc.index(function () {
-			setTimeout(function () {
-				Tweet.search({
-					query_string: {
-						query: 'know'
-					}
-				}, {}, function (err, res) {
-					const source: any = res?.body.hits.hits[0]._source
-					expect(source.message).toEqual('I know nodejitsu!')
-					done()
-				})
-			}, config.INDEXING_TIMEOUT)
-		})
+			doc.index(function () {
+				setTimeout(function () {
+					Tweet.search({
+						query_string: {
+							query: 'know'
+						}
+					}, function (err, res) {
+						const source = res?.body.hits.hits[0]._source
+						expect(source?.message).toEqual('I know nodejitsu!')
+						done()
+					})
+				}, config.INDEXING_TIMEOUT)
+			})
+		}
 	})
 
 	it('should be able to index to alternative index', async function (done) {
-		const doc: any = await Tweet.findOne({ message: 'I know kung-fu!' })
+		const doc = await Tweet.findOne({ message: 'I know kung-fu!' })
 
-		doc.message = 'I know taebo!'
+		if(doc) {
+			doc.message = 'I know taebo!'
 		
-		doc.index({
-			index: 'public_tweets'
-		}, function () {
-			setTimeout(function () {
-				Tweet.search({
-					query_string: {
-						query: 'know'
-					}
-				}, {
-					index: 'public_tweets'
-				}, function (err, res) {
-					const source: any = res?.body.hits.hits[0]._source
-					expect(source.message).toEqual('I know taebo!')
-					done()
-				})
-			}, config.INDEXING_TIMEOUT)
-		})
+			doc.index({
+				index: 'public_tweets'
+			}, function () {
+				setTimeout(function () {
+					Tweet.search({
+						query_string: {
+							query: 'know'
+						}
+					}, {
+						index: 'public_tweets'
+					}, function (err, res) {
+						const source = res?.body.hits.hits[0]._source
+						expect(source?.message).toEqual('I know taebo!')
+						done()
+					})
+				}, config.INDEXING_TIMEOUT)
+			})
+		}
 	})
 
 })

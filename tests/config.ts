@@ -17,13 +17,13 @@ async function deleteIndexIfExists(indexes: Array<string>): Promise<void> {
 	}
 }
 
-async function deleteDocs(models: Array<Model<PluginDocument>>): Promise<void> {
+async function deleteDocs<T extends PluginDocument>(models: Array<Model<T>>): Promise<void> {
 	for (const model of models) {
 		await model.deleteMany()
 	}
 }
 
-function createModelAndEnsureIndex(Model: Model<PluginDocument>, obj: any, cb: CallableFunction): void {
+function createModelAndEnsureIndex<T extends PluginDocument>(Model: Model<T>, obj: unknown, cb: CallableFunction): void {
 	const doc = new Model(obj)
 	doc.save(function () {
 		doc.on('es-indexed', function () {
@@ -34,7 +34,7 @@ function createModelAndEnsureIndex(Model: Model<PluginDocument>, obj: any, cb: C
 	})
 }
 
-async function createModelAndSave (Model: Model<PluginDocument>, obj: any): Promise<PluginDocument> {
+async function createModelAndSave (Model: Model<PluginDocument>, obj: unknown): Promise<PluginDocument> {
 	const dude = new Model(obj)
 	return await dude.save()
 }

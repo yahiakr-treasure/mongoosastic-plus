@@ -3,6 +3,12 @@
 import mongoose, { Schema } from 'mongoose'
 import { config } from './config'
 import mongoosastic from '../lib/index'
+import { PluginDocument } from 'types'
+
+interface IRank extends PluginDocument {
+	title: string,
+	rank: number
+}
 
 const rankSchema = new Schema({
 	title: String,
@@ -11,7 +17,7 @@ const rankSchema = new Schema({
 
 rankSchema.plugin(mongoosastic)
 
-const RankModel = mongoose.model('rank', rankSchema)
+const RankModel = mongoose.model<IRank>('rank', rankSchema)
 
 const esResultTexts = [
 	new RankModel({
@@ -56,7 +62,7 @@ describe('Hydrate with ES data', function () {
 			}, function (err, res) {
 				if (err) done(err)
 
-				const hits = res?.body.hits.hits as any
+				const hits = res?.body.hits.hydrated as IRank[]
 
 				expect(res?.body.hits.total).toEqual(3)
 
@@ -75,7 +81,7 @@ describe('Hydrate with ES data', function () {
 			}, function (err, res) {
 				if (err) done(err)
 
-				const hits = res?.body.hits.hits as any
+				const hits = res?.body.hits.hydrated as IRank[]
 
 				expect(res?.body.hits.total).toEqual(3)
 
@@ -102,7 +108,7 @@ describe('Hydrate with ES data', function () {
 			}, function (err, res) {
 				if (err) done(err)
 
-				const hits = res?.body.hits.hits as any
+				const hits = res?.body.hits.hydrated as IRank[]
 
 				expect(res?.body.hits.total).toEqual(3)
 
@@ -127,7 +133,7 @@ describe('Hydrate with ES data', function () {
 			}, function (err, res) {
 				if (err) done(err)
 				
-				const hits = res?.body.hits.hits as any
+				const hits = res?.body.hits.hydrated as IRank[]
 
 				expect(res?.body.hits.total).toEqual(3)
 

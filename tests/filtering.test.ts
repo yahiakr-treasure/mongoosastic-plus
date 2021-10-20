@@ -3,6 +3,12 @@
 import mongoose, { Schema } from 'mongoose'
 import { config } from './config'
 import mongoosastic from '../lib/index'
+import { Options, PluginDocument } from 'types'
+
+interface IMovie extends PluginDocument {
+	title: string,
+	genre: string,
+}
 
 // -- Only index specific field
 const MovieSchema = new Schema({
@@ -22,10 +28,10 @@ const MovieSchema = new Schema({
 })
 
 MovieSchema.plugin(mongoosastic, {
-	filter: function (self: any) {
+	filter: function(self: IMovie) {
 		return self.genre === 'action'
 	}
-})
+} as Options)
 
 const Movie = mongoose.model('Movie', MovieSchema)
 
@@ -80,7 +86,7 @@ describe('Filter mode', function () {
 		config.createModelAndEnsureIndex(Movie, {
 			title: 'REC',
 			genre: 'horror'
-		}, function (errSave: any, movie: any) {
+		}, function (errSave: unknown, movie: IMovie) {
 			Movie.search({
 				term: {
 					title: 'rec'

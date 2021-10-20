@@ -22,7 +22,7 @@ const PersonSchema = new Schema({
 	}],
 	somethingToCast: {
 		type: String,
-		es_cast: function (element: any) {
+		es_cast: function (element: string) {
 			return element + ' has been cast'
 		}
 	}
@@ -48,7 +48,7 @@ describe('serialize', function () {
 			date: new Date(Date.parse('06/17/1962'))
 		}],
 		somethingToCast: 'Something'
-	}) as any
+	})
 
 	// another person with missing parts to test robustness
 	const millionnaire = new Person({
@@ -59,13 +59,13 @@ describe('serialize', function () {
 	})
 
 	it('should serialize a document with missing bits', function () {
-		const serialized = serialize(millionnaire, mapping)
+		const serialized: any = serialize(millionnaire, mapping)
 		expect(serialized).toHaveProperty('games')
 		expect(serialized.games).toHaveLength(0)
 	})
 
 	describe('with no indexed fields', function () {
-		const serialized = serialize(dude, mapping)
+		const serialized: any = serialize(dude, mapping)
 		it('should serialize model fields', function () {
 			expect(serialized.name.first).toEqual('Jeffrey')
 			expect(serialized.name.last).toEqual('Lebowski')

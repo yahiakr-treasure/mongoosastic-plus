@@ -3,6 +3,7 @@
 import mongoose, { Schema } from 'mongoose'
 import { config } from './config'
 import mongoosastic from '../lib/index'
+import { QueryContainer } from '@elastic/elasticsearch/api/types'
 
 const GeoBoundingBoxSchema = new Schema({
 	text: {
@@ -141,7 +142,7 @@ describe('Geo Bounding Box Test', function () {
 		}
 
 		setTimeout(function () {
-			GeoBoundingBoxModel.search(geoQuery, function (err, res) {
+			GeoBoundingBoxModel.search(geoQuery as QueryContainer, function (err, res) {
 				expect(res?.body.hits.total).toEqual(2)
 				done()
 			})

@@ -1,8 +1,9 @@
 'use strict'
 
-import mongoose, { Schema } from 'mongoose'
+import mongoose, { Document, Schema } from 'mongoose'
 import { config } from './config'
 import mongoosastic from '../lib/index'
+import { Options } from 'types'
 
 const FoodSchema = new Schema({
 	name: {
@@ -13,13 +14,13 @@ FoodSchema.virtual('type').get(() => { return 'dinner' })
 FoodSchema.set('toObject', { getters: true, virtuals: true, versionKey: false })
 
 FoodSchema.plugin(mongoosastic, {
-	customSerialize (model: any) {
+	customSerialize: function(model: Document) {
 		const data = model.toObject()
 		delete data.id
 		delete data._id
 		return data
 	}
-})
+} as Options)
 
 const Food = mongoose.model('Food', FoodSchema)
 
@@ -45,7 +46,7 @@ describe('Custom Serialize', function () {
 				} 
 			}, {}, (searchError, results) => {
 				if (searchError) return done(searchError)
-				const source: any = results?.body.hits.hits[0]._source
+				const source = results?.body.hits.hits[0]._source
 				
 				expect(source.name).toEqual('pizza')
 				expect(source.type).toEqual('dinner')

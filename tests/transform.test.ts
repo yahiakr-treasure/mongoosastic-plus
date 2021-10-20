@@ -3,6 +3,13 @@
 import mongoose, { Schema } from 'mongoose'
 import { config } from './config'
 import mongoosastic from '../lib/index'
+import { PluginDocument } from 'types'
+
+interface IRepo extends PluginDocument {
+	name: string,
+	settingLicense: string,
+	detectedLicense: string,
+}
 
 // -- Only index specific field
 const RepoSchema = new Schema({
@@ -19,13 +26,13 @@ const RepoSchema = new Schema({
 })
 
 RepoSchema.plugin(mongoosastic, {
-	transform: function (data: any, repo: any) {
+	transform: function (data: Record<string, unknown>, repo: IRepo) {
 		data.license = repo.settingLicense || repo.detectedLicense
 		return data
 	}
 })
 
-const Repo = mongoose.model('Repo', RepoSchema)
+const Repo = mongoose.model<IRepo>('Repo', RepoSchema)
 
 describe('Transform mode', function () {
 
@@ -46,7 +53,7 @@ describe('Transform mode', function () {
 			name: 'LOTR',
 			settingLicense: '',
 			detectedLicense: 'Apache'
-		}, function (err: any, doc: any) {
+		}, function () {
 			Repo.search({
 				query_string: {
 					query: 'Apache'

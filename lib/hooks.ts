@@ -10,7 +10,7 @@ export function postSave(doc: PluginDocument): void {
 
 	const filter = options && options.filter
 
-	function onIndex (err: any, res: any) {
+	function onIndex (err: unknown, res: unknown) {
 		if (!filter || !filter(doc)) {
 			doc.emit('es-indexed', err, res)
 		} else {

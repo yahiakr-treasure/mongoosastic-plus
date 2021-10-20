@@ -1,4 +1,3 @@
-import { Client } from '@elastic/elasticsearch'
 import { Schema } from 'mongoose'
 import { Options, PluginDocument } from 'types'
 import { createEsClient } from './esClient'
@@ -6,8 +5,6 @@ import { postSave, postRemove } from './hooks'
 import { index, unIndex } from './methods'
 import { esSearch, search } from './search'
 import { createMapping, esCount, esTruncate, refresh, synchronize } from './statics'
-
-let client: Client
 
 const defaultOptions = {
 	indexAutomatically: true,
@@ -21,7 +18,10 @@ function mongoosastic(schema: Schema<PluginDocument>, options: Options = {}): vo
 	schema.method('esOptions', () => { return options })
 	schema.static('esOptions', () => { return options })
 
-	client = createEsClient(options)
+	const client = createEsClient(options)
+
+	schema.method('esClient', () => { return client })
+	schema.static('esClient', () => { return client })
 
 	schema.method('index', index)
 	schema.method('unIndex', unIndex)
@@ -45,10 +45,6 @@ function mongoosastic(schema: Schema<PluginDocument>, options: Options = {}): vo
 		schema.post('remove', postRemove)
 		schema.post(['findOneAndDelete', 'findOneAndRemove'], postRemove)
 	}
-}
-
-export {
-	client
 }
 
 export default mongoosastic

@@ -3,6 +3,7 @@
 import mongoose, { Schema } from 'mongoose'
 import { config } from './config'
 import mongoosastic from '../lib/index'
+import { Options } from 'types'
 
 // -- Only index specific field
 const PhoneSchema = new Schema({
@@ -13,7 +14,7 @@ const PhoneSchema = new Schema({
 })
 
 PhoneSchema.plugin(mongoosastic, {
-	transform: function (data: any, phone: any) {
+	transform: function (data, phone) {
 		data.created = new Date(phone._id.generationTime * 1000)
 		return data
 	},
@@ -21,8 +22,8 @@ PhoneSchema.plugin(mongoosastic, {
 		created: {
 			type: 'date'
 		}
-	}
-})
+	},
+} as Options)
 
 const Phone = mongoose.model('Phone', PhoneSchema)
 
@@ -52,7 +53,7 @@ describe('Custom Properties for Mapping', function () {
 			}, {
 				sort: 'created:asc'
 			}, function (err, results) {
-				const hit: any = results?.body.hits.hits[0]._source
+				const hit = results?.body.hits.hits[0]._source
         
 				expect(results?.body.hits.total).toEqual(1)
 				expect(hit.created).toBeDefined()

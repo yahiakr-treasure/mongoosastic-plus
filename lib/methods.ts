@@ -1,17 +1,17 @@
-import { PluginDocument } from 'types'
+import { IndexMethodOptions, PluginDocument } from 'types'
 import { deleteById, getIndexName, serialize } from './utils'
-import { client } from './index'
 import { bulkAdd, bulkDelete } from './bulking'
 import Generator from './mapping'
 
-export function index(this: PluginDocument, inOpts: any = {}, cb?: CallableFunction): void {
+export function index(this: PluginDocument, inOpts: IndexMethodOptions = {}, cb: CallableFunction): void {
 
-	if (arguments.length < 2) {
-		cb = inOpts
+	if (cb === undefined) {
+		cb = inOpts as CallableFunction
 		inOpts = {}
 	}
 
 	const options = this.esOptions()
+	const client = this.esClient()
 
 	const filter = options && options.filter
 
@@ -44,26 +44,28 @@ export function index(this: PluginDocument, inOpts: any = {}, cb?: CallableFunct
 	}
 
 	if (opt.bulk) {
-		bulkAdd(opt)
-		setImmediate(() => { if (cb) cb(null, this) })
+		bulkAdd({ client, ...opt })
+		setImmediate(() => { cb(null, this) })
 
 	} else {
-		client.index(opt).then((value) => { if (cb) cb(value) })
+		client.index(opt).then((value) => { cb(null, value) })
 	}
 }
 
 export function unIndex(this: PluginDocument, cb?: CallableFunction): void {
 
 	const options = this.esOptions()
+	const client = this.esClient()
 
 	const indexName = getIndexName(this)
 
 	const opt = {
+		client: client,
 		index: indexName,
 		tries: 3,
 		id: this._id.toString(),
 		bulk: options.bulk,
-		model: this,
+		document: this,
 		routing: options.routing ? options.routing(this) : undefined
 	}
 

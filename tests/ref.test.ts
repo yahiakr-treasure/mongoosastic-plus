@@ -83,7 +83,7 @@ describe('references', function () {
 			esClient.get({
 				index: 'posts',
 				id: post._id.toString()
-			}, function (err: any, res: any) {
+			}, {}, function (err, res) {
 				if (err) return done(err)
 				
 				expect(res.body._source.author.name).toEqual('jake')
@@ -129,7 +129,7 @@ describe('references', function () {
 				esClient.get({
 					index: 'posts',
 					id: post._id.toString()
-				}, function (err: any, res: any) {
+				}, {}, function (err, res) {
 					if (err) return done(err)
 					const comments = res.body._source.comments
 

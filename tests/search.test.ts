@@ -4,6 +4,13 @@ import mongoose, { Schema } from 'mongoose'
 import { config } from './config'
 import mongoosastic from '../lib/index'
 import { Aggregate, Hit } from '@elastic/elasticsearch/api/types'
+import { PluginDocument } from 'types'
+
+interface IBond extends PluginDocument {
+	name: string,
+	type: string,
+	price: number
+}
 
 const BondSchema = new Schema({
 	name: String,
@@ -16,7 +23,7 @@ const BondSchema = new Schema({
 
 BondSchema.plugin(mongoosastic)
 
-const Bond = mongoose.model('Bond', BondSchema)
+const Bond = mongoose.model<IBond>('Bond', BondSchema)
 
 const bonds = [
 	new Bond({
@@ -71,11 +78,11 @@ describe('Query DSL', function () {
 						to: 30000
 					}
 				}
-			}, {}, function (err, res) {
+			}, function (err, res) {
 				expect(res?.body.hits.total).toEqual(2)
 
-				res?.body.hits.hits.forEach(function (bond: any) {
-					expect(['Legal', 'Construction']).toContainEqual(bond._source.name)
+				res?.body.hits.hits.forEach(function (bond) {
+					expect(['Legal', 'Construction']).toContainEqual(bond._source?.name)
 				})
 
 				done()
@@ -84,8 +91,8 @@ describe('Query DSL', function () {
 	})
 
 	describe('Sort', function () {
-		const getNames = function (res: Hit<any>) {
-			return res._source.name
+		const getNames = function (res: Hit<IBond>) {
+			return res._source?.name
 		}
 		const expectedDesc = ['Legal', 'Construction', 'Commercial', 'Bail']
 		const expectedAsc = expectedDesc.concat([]).reverse() // clone and reverse
@@ -195,8 +202,8 @@ describe('Query DSL', function () {
 
 	describe('Fuzzy search', function () {
 		it('should do a fuzzy query', function (done) {
-			const getNames = function (res: Hit<any>) {
-				return res._source.name
+			const getNames = function (res: Hit<IBond>) {
+				return res._source?.name
 			}
 
 			Bond.esSearch({

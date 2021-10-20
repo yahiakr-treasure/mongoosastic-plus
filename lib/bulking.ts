@@ -1,14 +1,15 @@
-import { client } from './index'
+import { Client } from '@elastic/elasticsearch'
+import { BulkIndexOptions, BulkInstruction, BulkOptions, BulkUnIndexOptions } from 'types'
 
-let bulkBuffer: any[] = []
-let bulkTimeout: any
+let bulkBuffer: BulkInstruction[] = []
+let bulkTimeout: NodeJS.Timeout | undefined
 
 function clearBulkTimeout() {
-	clearTimeout(bulkTimeout)
+	clearTimeout(bulkTimeout as NodeJS.Timeout)
 	bulkTimeout = undefined
 }
 
-export function bulkAdd(opts: any): void {
+export function bulkAdd(opts: BulkIndexOptions): void {
 	const instruction = [{
 		index: {
 			_index: opts.index,
@@ -16,10 +17,10 @@ export function bulkAdd(opts: any): void {
 		}
 	}, opts.body]
 	
-	bulkIndex(instruction, opts.bulk)
+	bulkIndex(instruction, opts.bulk as BulkOptions, opts.client)
 }
 
-export function bulkDelete(opts: any): void {
+export function bulkDelete(opts: BulkUnIndexOptions): void {
 	const instruction = [{
 		delete: {
 			_index: opts.index,
@@ -27,25 +28,25 @@ export function bulkDelete(opts: any): void {
 		}
 	}]
 	
-	bulkIndex(instruction, opts.bulk)
+	bulkIndex(instruction, opts.bulk as BulkOptions, opts.client)
 }
 
-export function bulkIndex(instruction: any[], bulk: any): void {
+export function bulkIndex(instruction: BulkInstruction[], bulk: BulkOptions, client: Client): void {
 
 	bulkBuffer = bulkBuffer.concat(instruction)
 
 	if (bulkBuffer.length >= bulk.size) {
-		flush()
+		flush(client)
 		clearBulkTimeout()
 	} else if (bulkTimeout === undefined) {
 		bulkTimeout = setTimeout(() => {
-			flush()
+			flush(client)
 			clearBulkTimeout()
 		}, bulk.delay)
 	}
 }
 
-function flush(): void {
+function flush(client: Client): void {
 	client.bulk({
 		body: bulkBuffer
 	}, (err, res) => {

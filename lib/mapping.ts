@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use strict'
 
 import cloneDeep from 'lodash.clonedeep'
+import { Schema } from 'mongoose'
 
 //
 // Get type from the mongoose schema
@@ -287,13 +289,13 @@ function nestedSchema (paths: Record<string, any>, field: string, cleanTree: Rec
 }
 
 export default class Generator {
-	generateMapping(schema: any): Record<string, any> {
-		const cleanTree = getCleanTree(schema.tree, schema.paths, '', true)
+	generateMapping(schema: Schema): Record<string, any> {
+		const cleanTree = getCleanTree(schema['tree' as keyof Schema], schema.paths, '', true)
 		delete cleanTree[schema.get('versionKey')]
 		const mapping = getMapping(cleanTree, '')
 		return { properties: mapping }
 	}
-	getCleanTree(schema: any): Record<string, any> {
-		return getCleanTree(schema.tree, schema.paths, '', true)
+	getCleanTree(schema: Schema): Record<string, any> {
+		return getCleanTree(schema['tree' as keyof Schema], schema.paths, '', true)
 	}
 }
