@@ -9,7 +9,7 @@ function clearBulkTimeout() {
 	bulkTimeout = undefined
 }
 
-export function bulkAdd(opts: BulkIndexOptions): void {
+export function bulkAdd(opts: BulkIndexOptions, cb?: CallableFunction): void {
 	const instruction = [{
 		index: {
 			_index: opts.index,
@@ -17,10 +17,10 @@ export function bulkAdd(opts: BulkIndexOptions): void {
 		}
 	}, opts.body]
 	
-	bulkIndex(instruction, opts.bulk as BulkOptions, opts.client)
+	bulkIndex(instruction, opts.bulk as BulkOptions, opts.client, cb)
 }
 
-export function bulkDelete(opts: BulkUnIndexOptions): void {
+export function bulkDelete(opts: BulkUnIndexOptions, cb?: CallableFunction): void {
 	const instruction = [{
 		delete: {
 			_index: opts.index,
@@ -28,40 +28,41 @@ export function bulkDelete(opts: BulkUnIndexOptions): void {
 		}
 	}]
 	
-	bulkIndex(instruction, opts.bulk as BulkOptions, opts.client)
+	bulkIndex(instruction, opts.bulk as BulkOptions, opts.client, cb)
 }
 
-export function bulkIndex(instruction: BulkInstruction[], bulk: BulkOptions, client: Client): void {
+export function bulkIndex(instruction: BulkInstruction[], bulk: BulkOptions, client: Client, cb?: CallableFunction): void {
 
 	bulkBuffer = bulkBuffer.concat(instruction)
 
 	if (bulkBuffer.length >= bulk.size) {
-		flush(client)
+		flush(client, cb)
 		clearBulkTimeout()
 	} else if (bulkTimeout === undefined) {
 		bulkTimeout = setTimeout(() => {
-			flush(client)
+			flush(client, cb)
 			clearBulkTimeout()
 		}, bulk.delay)
 	}
 }
 
-function flush(client: Client): void {
+function flush(client: Client, cb?: CallableFunction): void {
 	client.bulk({
 		body: bulkBuffer
 	}, (err, res) => {
 		if (err) {
 			// bulkErrEm.emit('error', err, res)
+			if(cb) cb(err, null)
 		}
 		if (res.body.items && res.body.items.length) {
 			for (let i = 0; i < res.body.items.length; i++) {
 				const info = res.body.items[i]
 				if (info && info.index && info.index.error) {
 					// bulkErrEm.emit('error', null, info.index)
+					if(cb) cb(info.index, null)
 				}
 			}
 		}
-		// cb()
 	})
 	bulkBuffer = []
 }

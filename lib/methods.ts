@@ -44,7 +44,7 @@ export function index(this: PluginDocument, inOpts: IndexMethodOptions = {}, cb:
 	}
 
 	if (opt.bulk) {
-		bulkAdd({ client, ...opt })
+		bulkAdd({ client, ...opt }, cb)
 		setImmediate(() => { cb(null, this) })
 
 	} else {
@@ -70,7 +70,7 @@ export function unIndex(this: PluginDocument, cb?: CallableFunction): void {
 	}
 
 	if (opt.bulk) {
-		bulkDelete(opt)
+		bulkDelete(opt, cb)
 	} else {
 		deleteById(opt, cb)
 	}
